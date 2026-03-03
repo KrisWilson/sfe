@@ -9,8 +9,13 @@ import (
 type Config struct {
 	ServerPort int
 	ServerPass string
+	ServerDB   string
 	ClientPort int
 	ConnectIP  string
+	UserPass   string
+	UserName   string
+	Shared     string
+	Downloads  string
 }
 
 func Load() Config {
@@ -18,8 +23,11 @@ func Load() Config {
 	// Ustawianie domyślnych wartości konfiguracji
 	viper.SetDefault("serverport", 7096)
 	viper.SetDefault("serverpass", "password")
+	viper.SetDefault("serverdb", "maindb")
 	viper.SetDefault("clientport", 7096)
 	viper.SetDefault("connectip", "localhost")
+	viper.SetDefault("userpass", "password")
+	viper.SetDefault("username", "user")
 	viper.SetDefault("shared", "./share")
 	viper.SetDefault("download", "./download")
 
@@ -41,8 +49,13 @@ func Load() Config {
 	loaded := Config{
 		ServerPort: viper.GetInt("serverport"),
 		ServerPass: viper.GetString("serverpass"),
+		ServerDB:   viper.GetString("serverdb"),
 		ClientPort: viper.GetInt("clientport"),
 		ConnectIP:  viper.GetString("connectip"),
+		UserPass:   viper.GetString("userpass"),
+		UserName:   viper.GetString("username"),
+		Shared:     viper.GetString("shared"),
+		Downloads:  viper.GetString("download"),
 	}
 
 	return loaded

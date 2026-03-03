@@ -29,13 +29,12 @@ func Run() {
 	fmt.Println("[2] Host a server")
 	fmt.Println("[3] Show config")
 	fmt.Println("[4] Exit")
-	//fmt.Println("Your choice: \"" + string(input) + "\"")
 	input := readKey()
 
 	switch string(input) {
 	case "1":
 		config := settings.Load()
-		data := []byte(`{"pass":"` + config.ServerPass + `"}`)
+		data := []byte(`{"pass":"` + config.UserPass + `",` + `"user":"` + config.UserName + `"` + `}`)
 
 		req, err := http.NewRequest(http.MethodPost, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/authorize", bytes.NewBuffer(data))
 		if err != nil {
@@ -72,13 +71,18 @@ func Run() {
 
 		fmt.Println("")
 		fmt.Printf("File loaded: %s\n", viper.ConfigFileUsed())
-		fmt.Println("Server Config:")
+		fmt.Println("\tServer Config:")
 		fmt.Printf("Server Port: %d\n", config.ServerPort)
-		fmt.Printf("Server Password: %s\n\n", config.ServerPass)
+		fmt.Printf("Server Password: %s\n", config.ServerPass)
+		fmt.Printf("Server DB: %s\n\n", config.ServerDB)
 
-		fmt.Println("Client Config:")
-		fmt.Printf("Client Port: %d\n", config.ClientPort)
+		fmt.Println("\tClient Config:")
 		fmt.Printf("Connect IP: %s\n", config.ConnectIP)
+		fmt.Printf("Connect Port: %d\n", config.ClientPort)
+		fmt.Printf("Username: %s\n", config.UserName)
+		fmt.Printf("Userpass: %s\n", config.UserPass)
+		fmt.Printf("Shared: %s\n", config.Shared)
+		fmt.Printf("Downloads: %s\n", config.Downloads)
 
 		fmt.Print("<< Press enter to continue\n")
 		reader := bufio.NewReader(os.Stdin)

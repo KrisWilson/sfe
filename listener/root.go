@@ -1,22 +1,25 @@
 package listener
 
 import (
+	_ "database/sql"
 	"encoding/json"
-	_ "encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"sfe/settings"
 	"strconv"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type User struct {
+	Name string `json:"user"`
 	Pass string `json:"pass"`
 }
 
 func authorizeHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
+	if r.Method != "POST" {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
 	}
@@ -33,7 +36,8 @@ func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("[authorizeHandler] " + r.URL.Path + " " + r.Method + " " + r.RemoteAddr + " " + r.FormValue("pass") + user.Pass)
+	fmt.Println("[authorizeHandler] " + r.URL.Path + " " + r.Method + " " + r.RemoteAddr + " " + user.Name + "=>" + user.Pass)
+
 	if settings.PassVerify(user.Pass) {
 		_, err := fmt.Fprintln(w, "Authorized")
 		if err != nil {
@@ -44,7 +48,10 @@ func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func usersHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "List of users...")
+	_, err := fmt.Fprintln(w, "List of users...")
+	if err != nil {
+		return
+	}
 }
 
 func Host(port int) {
