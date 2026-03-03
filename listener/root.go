@@ -2,6 +2,7 @@ package listener
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"sfe/settings"
@@ -9,9 +10,18 @@ import (
 )
 
 func authorizeHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("[authorizeHandler] " + r.URL.Path + " " + r.Method + " " + r.RemoteAddr)
-	fmt.Println("! any")
-	_, err := fmt.Fprintln(w, "Hello, world!")
+	fmt.Println("[authorizeHandler] " + r.URL.Path + " " + r.Method + " " + r.RemoteAddr + " " + r.FormValue("pass") + "!")
+	bodyBytes, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Wyświetlanie danych wysyłanych przez klienta
+	fmt.Fprintf(w, "Dane od klienta: %s\n", bodyBytes)
+
+	ok, err := fmt.Fprintln(w, "Hello, world!")
+	ok = ok + 1
 	if err != nil {
 		return
 	}

@@ -35,7 +35,7 @@ func Run() {
 	switch string(input) {
 	case "1":
 		config := settings.Load()
-		data := []byte(`{"key": "value"}`)
+		data := []byte(`{"pass":"` + config.ServerPass + `"}`)
 
 		req, err := http.NewRequest(http.MethodPost, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/authorize", bytes.NewBuffer(data))
 		if err != nil {
@@ -63,6 +63,7 @@ func Run() {
 
 		fmt.Println(string(bodyBytes))
 		fmt.Println("Zakonczone połączenie")
+
 	case "2":
 		listener.Host(8670)
 
@@ -88,8 +89,13 @@ func Run() {
 	case "4":
 		fmt.Println("Exiting...")
 		os.Exit(0)
+
 	default:
-		fmt.Println("Invalid choice.")
+		fmt.Println("Invalid choice")
+		fmt.Print("<< Press enter to continue\n")
+		reader := bufio.NewReader(os.Stdin)
+		_, _, _ = reader.ReadRune()
+		Run()
 	}
 
 }
