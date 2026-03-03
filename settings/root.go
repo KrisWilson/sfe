@@ -1,18 +1,16 @@
 package settings
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 
 	"github.com/spf13/viper"
 )
 
 type Config struct {
-	serverPort int
-	serverPass string
-	clientPort int
-	connectIP  string
+	ServerPort int
+	ServerPass string
+	ClientPort int
+	ConnectIP  string
 }
 
 func Load() Config {
@@ -22,6 +20,8 @@ func Load() Config {
 	viper.SetDefault("serverpass", "password")
 	viper.SetDefault("clientport", 7096)
 	viper.SetDefault("connectip", "localhost")
+	viper.SetDefault("shared", "./share")
+	viper.SetDefault("download", "./download")
 
 	// Wczytanie ustawień z pliku settings.config
 	viper.AddConfigPath(".")
@@ -39,25 +39,11 @@ func Load() Config {
 	}
 
 	loaded := Config{
-		serverPort: viper.GetInt("serverport"),
-		serverPass: viper.GetString("serverpass"),
-		clientPort: viper.GetInt("clientport"),
-		connectIP:  viper.GetString("connectip"),
+		ServerPort: viper.GetInt("serverport"),
+		ServerPass: viper.GetString("serverpass"),
+		ClientPort: viper.GetInt("clientport"),
+		ConnectIP:  viper.GetString("connectip"),
 	}
-
-	fmt.Println("")
-	fmt.Printf("File loaded: %s\n", viper.ConfigFileUsed())
-	fmt.Println("Server Config:")
-	fmt.Printf("Server Port: %d\n", loaded.serverPort)
-	fmt.Printf("Server Password: %s\n\n", loaded.serverPass)
-
-	fmt.Println("Client Config:")
-	fmt.Printf("Client Port: %d\n", loaded.clientPort)
-	fmt.Printf("Connect IP: %s\n", loaded.connectIP)
-
-	fmt.Print("<< naciśnij enter aby kontynuuować\n")
-	reader := bufio.NewReader(os.Stdin)
-	_, _, _ = reader.ReadRune()
 
 	return loaded
 }
