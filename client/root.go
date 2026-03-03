@@ -4,22 +4,39 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+
+	"sfe/listener"
+	"sfe/settings"
 )
 
-func Run() {
-	// Dodaj obsługę menu interaktywnego
-	fmt.Println("Welcome to My Application!")
-	fmt.Println("1. View version")
-	fmt.Println("2. Exit")
-
+func readKey() rune {
 	reader := bufio.NewReader(os.Stdin)
-	input, _ := reader.ReadString('\n')
+	char, _, _ := reader.ReadRune()
+	return char
+}
 
-	switch input {
+func Run() {
+
+	fmt.Println("<<< SFE - Small File Exchanger >>>")
+	fmt.Println("[1] Connect to Server")
+	fmt.Println("[2] Host a server")
+	fmt.Println("[3] Show config")
+	fmt.Println("[4] Exit")
+	//fmt.Println("Your choice: \"" + string(input) + "\"")
+	input := readKey()
+
+	switch string(input) {
 	case "1":
-		// Wywołaj polecenie view-version
+
 	case "2":
-		fmt.Println("Goodbye!")
+		listener.Host(8670)
+
+	case "3":
+		settings.Load()
+		Run()
+
+	case "4":
+		fmt.Println("Exiting...")
 		os.Exit(0)
 	default:
 		fmt.Println("Invalid choice.")
