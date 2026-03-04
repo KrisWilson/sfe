@@ -36,9 +36,9 @@ func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("[authorizeHandler] " + r.URL.Path + " " + r.Method + " " + r.RemoteAddr + " " + user.Name + "=>" + user.Pass)
+	fmt.Println("[authorizeHandler] " + r.URL.Path + " " + r.Method + " " + r.RemoteAddr)
 
-	if settings.PassVerify(user.Pass) {
+	if CheckPassword(user.Pass, user.Name) {
 		_, err := fmt.Fprintln(w, "Authorized")
 		if err != nil {
 			return
@@ -55,8 +55,8 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func Host(port int) {
-
 	config := settings.Load()
+	InitDB(config.ServerDB)
 	http.HandleFunc("/authorize", authorizeHandler)
 	http.HandleFunc("/users", usersHandler)
 	log.Printf("Listening on port %d\n", config.ServerPort)

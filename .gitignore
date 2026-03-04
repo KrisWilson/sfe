@@ -2,3 +2,4 @@ go.sum
 .idea/
 .gitignore
 config.yaml
+maindb.db
