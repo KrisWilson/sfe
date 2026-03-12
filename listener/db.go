@@ -7,14 +7,16 @@ import (
 	"math/rand"
 	"os"
 	"sfe/settings"
+	"time"
 )
 
 type user struct {
-	ID    int    `db:"id"`
-	Name  string `db:"name"`
-	Pass  string `db:"pass"`
-	Dir   string `db:"dir"`
-	Token string `db:"token"`
+	ID      int       `db:"id"`
+	Name    string    `db:"name"`
+	Pass    string    `db:"pass"`
+	Dir     string    `db:"dir"`
+	Token   string    `db:"token"`
+	Timeout time.Time `db:"timeout"`
 }
 
 func InitDB(dbname string) {
@@ -51,27 +53,21 @@ func InitDB(dbname string) {
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				name VARCHAR(20) NOT NULL,
 				pass VARCHAR(20) NOT NULL,
-				dir TEXT,
-				token CHAR(64) UNIQUE
+				dir TEXT NOT NULL,
+				token CHAR(64) UNIQUE NOT NULL,
+    			timeout DATETIME NOT NULL 
                 )`)
 		if err != nil {
 			fmt.Println("[DB] Unable to create table")
 			panic(err)
 		}
 		fmt.Println("[DB] Dodano tablice users do bazy danych")
-
-		_, err = db.Exec("INSERT INTO users (name, pass, dir, token) VALUES (?,?,?,?)", "user", "password", "userdir", "")
-		if err != nil {
-			fmt.Println("[DB] Unable to insert user")
-			panic(err)
-		}
-
-		fmt.Println("[DB] Dodano użytkownika defaultowego user:password")
 		err = db.Close()
 		if err != nil {
 			fmt.Println("[DB] Unable to close database")
 			return
 		}
+		AddUser("user", "password", "userdir")
 	}
 }
 
@@ -87,6 +83,7 @@ func newToken(username string) string {
 	}
 
 	err = db.QueryRow("UPDATE users SET token = ? WHERE name = ?", token, username).Scan(&username)
+	err = db.QueryRow("UPDATE users SET timeout = ? WHERE name = ?", time.Now().Format(time.DateTime), username).Scan(&username)
 	return token
 }
 
@@ -96,7 +93,7 @@ func getUser(username string) (user, error) {
 	db, err := sql.Open("sqlite3", dsn)
 
 	var u user
-	err = db.QueryRow("SELECT * FROM users WHERE name = ?", username).Scan(&u.ID, &u.Name, &u.Pass, &u.Dir, &u.Token)
+	err = db.QueryRow("SELECT * FROM users WHERE name = ?", username).Scan(&u.ID, &u.Name, &u.Pass, &u.Dir, &u.Token, &u.Timeout)
 	if err != nil {
 		return u, err
 	}
@@ -111,11 +108,24 @@ func RemoveUser(username string) {
 
 func AddUser(username string, password string, userdir string) {
 	dsn := "file:" + settings.Load().ServerDB + ".db?cache=shared&mode=rw"
-	db, _ := sql.Open("sqlite3", dsn)
+	db, err := sql.Open("sqlite3", dsn)
+	if err != nil {
+		fmt.Println("[DB] Unable to connect to database")
+	}
+
 	if len(userdir) == 0 {
 		userdir = username + "dir"
 	}
-	db.QueryRow("INSERT INTO users (name, pass, dir) VALUES (?, ?, ?)", username, password, userdir)
+
+	now := time.Now()
+	_, err = db.Exec("INSERT INTO users (name, pass, dir, token, timeout) VALUES (?,?,?,?,?)",
+		username, password, userdir, "", now.Format(time.DateTime))
+	if err != nil {
+		fmt.Println("[DB] Unable to insert user")
+		panic(err)
+	}
+	//newToken(username)
+
 	fmt.Println("Dodano uzytkownika " + username)
 }
 
@@ -134,10 +144,11 @@ func CheckToken(token string) user {
 	db, err := sql.Open("sqlite3", dsn)
 	var u user
 	u.ID = -1
-	err = db.QueryRow("SELECT * FROM users WHERE token = ?", token).Scan(&u.ID, &u.Name, &u.Pass, &u.Dir, &u.Token)
+	err = db.QueryRow("SELECT * FROM users WHERE token = ?", token).Scan(&u.ID, &u.Name, &u.Pass, &u.Dir, &u.Token, &u.Timeout)
 	if err != nil {
 		return u
 	}
+
 	return u
 }
 
