@@ -18,6 +18,18 @@ type User struct {
 	Pass string `json:"pass"`
 }
 
+func exploreHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		var u = CheckToken(r.Header.Get("Token"))
+		if u.ID != -1 {
+
+		}
+	} else {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+}
+
 func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
@@ -36,13 +48,16 @@ func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("[authorizeHandler] " + r.URL.Path + " " + r.Method + " " + r.RemoteAddr)
-
 	if CheckPassword(user.Pass, user.Name) {
-		_, err := fmt.Fprintln(w, "Authorized")
+		_, err := fmt.Fprintln(w, "<<Token::Authorized>>")
+		fmt.Println("[authorizeHandler] " + r.URL.Path + " " + r.Method + " " + r.RemoteAddr + " Authorized: " + user.Name)
 		if err != nil {
 			return
 		}
+	} else {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		fmt.Println("[authorizeHandler] " + r.URL.Path + " " + r.Method + " " + r.RemoteAddr + " Unauthorized: " + user.Name)
+		return
 	}
 
 }
@@ -57,8 +72,11 @@ func usersHandler(w http.ResponseWriter, r *http.Request) {
 func Host(port int) {
 	config := settings.Load()
 	InitDB(config.ServerDB)
+
 	http.HandleFunc("/authorize", authorizeHandler)
 	http.HandleFunc("/users", usersHandler)
+	http.HandleFunc("/explore", exploreHandler)
+
 	log.Printf("Listening on port %d\n", config.ServerPort)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})

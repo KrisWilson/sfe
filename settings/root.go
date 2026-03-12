@@ -7,14 +7,16 @@ import (
 )
 
 type Config struct {
+	// server
 	ServerPort int
 	ServerPass string
 	ServerDB   string
+	Shared     string
+	// client
 	ClientPort int
 	ConnectIP  string
 	UserPass   string
 	UserName   string
-	Shared     string
 	Downloads  string
 }
 
@@ -24,11 +26,12 @@ func Load() Config {
 	viper.SetDefault("serverport", 7096)
 	viper.SetDefault("serverpass", "password")
 	viper.SetDefault("serverdb", "maindb")
+	viper.SetDefault("shared", "./share")
+	// klienta defaultowe wartości parametrów konfiguracji
 	viper.SetDefault("clientport", 7096)
 	viper.SetDefault("connectip", "localhost")
 	viper.SetDefault("userpass", "password")
 	viper.SetDefault("username", "user")
-	viper.SetDefault("shared", "./share")
 	viper.SetDefault("download", "./download")
 
 	// Wczytanie ustawień z pliku settings.config
@@ -38,8 +41,8 @@ func Load() Config {
 
 	err := viper.ReadInConfig() // Wczytaj konfigurację z pliku
 	if err != nil {
-		fmt.Println("Error reading config file:", err)
-		fmt.Println("Used default properties")
+		fmt.Println("[Settings] Error reading config file:", err)
+		fmt.Println("[Settings] Used default properties")
 		err := viper.SafeWriteConfig()
 		if err != nil {
 			return Config{}
@@ -47,14 +50,16 @@ func Load() Config {
 	}
 
 	loaded := Config{
+		// server config properties
 		ServerPort: viper.GetInt("serverport"),
 		ServerPass: viper.GetString("serverpass"),
 		ServerDB:   viper.GetString("serverdb"),
+		Shared:     viper.GetString("shared"),
+		// client config properties
 		ClientPort: viper.GetInt("clientport"),
 		ConnectIP:  viper.GetString("connectip"),
 		UserPass:   viper.GetString("userpass"),
 		UserName:   viper.GetString("username"),
-		Shared:     viper.GetString("shared"),
 		Downloads:  viper.GetString("download"),
 	}
 

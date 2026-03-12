@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
-	"github.com/spf13/cobra"
 	"log"
 	"os"
 	"sfe/client"
 	"sfe/listener"
+
+	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
@@ -36,10 +38,45 @@ var serverCmd = &cobra.Command{
 	},
 }
 
+var addCmd = &cobra.Command{
+	Use:   "add",
+	Short: "Dodaj uzytkownika do bazy danych",
+	Long:  " ",
+	//Args:  cobra.ExactArgs(0),
+	Run: func(cmd *cobra.Command, args []string) {
+
+		reader := bufio.NewReader(os.Stdin)
+
+		fmt.Print("Podaj nazwe uzytkownika: ")
+		username, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Println("Błąd podczas czytania danych:", err)
+			return
+		}
+
+		fmt.Print("Podaj hasło uzytkownika: ")
+		password, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Println("Błąd podczas czytania danych:", err)
+			return
+		}
+
+		fmt.Print("Podaj folder uzytkownika [default=username]: ")
+		userdir, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Println("Błąd podczas czytania danych:", err)
+			return
+		}
+
+		listener.AddUser(username, password, userdir)
+	},
+}
+
 func init() {
 	serverCmd.Flags().IntP("port", "p", 8670, "Server port")
 	serverCmd.Aliases = []string{"host", "listen"}
 	rootCmd.AddCommand(serverCmd)
+	rootCmd.AddCommand(addCmd)
 
 	// Dodaj komendę zatrzymującą serwer HTTP
 	stopCmd := &cobra.Command{

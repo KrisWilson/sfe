@@ -1,7 +1,10 @@
 package main
 
-import "sfe/cmd"
+import (
+	"sfe/cmd"
+)
 
 func main() {
 	cmd.Execute()
+
 }
