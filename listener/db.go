@@ -83,7 +83,7 @@ func newToken(username string) string {
 	}
 
 	err = db.QueryRow("UPDATE users SET token = ? WHERE name = ?", token, username).Scan(&username)
-	err = db.QueryRow("UPDATE users SET timeout = ? WHERE name = ?", time.Now().Format(time.DateTime), username).Scan(&username)
+	err = db.QueryRow("UPDATE users SET timeout = ? WHERE name = ?", time.Now().Add(time.Hour*1).Format(time.DateTime), username).Scan(&username)
 	return token
 }
 
@@ -148,7 +148,11 @@ func CheckToken(token string) user {
 	if err != nil {
 		return u
 	}
-
+	now := time.Now()
+	if u.Timeout.Before(now) { // czy timeout jest po aktualnym czasie tzn później
+		u.ID = -1
+		return u
+	}
 	return u
 }
 
