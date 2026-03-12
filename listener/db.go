@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"database/sql"
 	"fmt"
+	"math/rand"
 	"os"
 	"sfe/settings"
 )
@@ -72,6 +73,21 @@ func InitDB(dbname string) {
 			return
 		}
 	}
+}
+
+func newToken(username string) string {
+	dsn := "file:" + settings.Load().ServerDB + ".db?cache=shared&mode=rw"
+	db, err := sql.Open("sqlite3", dsn)
+	if err != nil {
+		fmt.Println("[DB] Unable to connect to database")
+	}
+	var token string
+	for i := 0; i < 64; i++ {
+		token = token + string('A'+rand.Intn(52))
+	}
+
+	err = db.QueryRow("UPDATE users SET token = ? WHERE name = ?", token, username).Scan(&username)
+	return token
 }
 
 func getUser(username string) (user, error) {

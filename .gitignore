@@ -4,3 +4,4 @@ go.sum
 config.yaml
 maindb.db
 /artifacts
+/share

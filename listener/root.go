@@ -7,8 +7,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"sfe/settings"
 	"strconv"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -22,7 +24,47 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		var u = CheckToken(r.Header.Get("Token"))
 		if u.ID != -1 {
+			_, err := fmt.Fprintf(w, "Authorized - token accepted, Welcome "+u.Name+"\n")
+			if err != nil {
+				return
+			}
 
+			err = r.ParseForm()
+			if err != nil {
+				return
+			}
+			now := time.Now()
+			folderPath := settings.Load().Shared + r.FormValue("path")
+			file := r.FormValue("file")
+			if file != "" {
+				if len(folderPath) == 0 {
+					folderPath = "/"
+				}
+				fmt.Println(now.Format(time.DateTime) + " [Explorer] " + u.Name + " accessed file: " + folderPath + file)
+				fileDownload, _ := os.ReadFile(folderPath + file)
+				_, err := w.Write(fileDownload)
+				if err != nil {
+					return
+				}
+			} else {
+				files, err := os.ReadDir(folderPath)
+				if err != nil {
+					fmt.Println("Error reading directory:", err)
+					fmt.Fprintln(w, "Error reading directory")
+					return
+				}
+				fmt.Println(now.Format(time.DateTime) + " [Explorer] " + u.Name + " accessed folder: " + folderPath)
+				fmt.Fprintf(w, "Folder path: %s\n", folderPath)
+				for _, file := range files {
+					if file.IsDir() {
+						fmt.Fprintf(w, "Folder\t"+file.Name()+"\n")
+					} else {
+						fmt.Fprintf(w, "File\t"+file.Name()+"\n")
+					}
+				}
+			}
+		} else {
+			fmt.Fprintf(w, "Authorized - token not accepted")
 		}
 	} else {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -50,6 +92,7 @@ func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 
 	if CheckPassword(user.Pass, user.Name) {
 		_, err := fmt.Fprintln(w, "<<Token::Authorized>>")
+		_, err = fmt.Fprintln(w, newToken(user.Name))
 		fmt.Println("[authorizeHandler] " + r.URL.Path + " " + r.Method + " " + r.RemoteAddr + " Authorized: " + user.Name)
 		if err != nil {
 			return
