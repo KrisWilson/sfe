@@ -3,4 +3,4 @@ go.sum
 .gitignore
 config.yaml
 maindb.db
-./artifacts
+/artifacts
