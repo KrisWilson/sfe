@@ -88,7 +88,6 @@ func Run() {
 		// Test exploracji /
 		req, err = http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore", bytes.NewBuffer(data))
 		req.Header.Set("Token", token)
-		req.Header.Add("Token", token)
 		if err != nil {
 			panic(err)
 		}
