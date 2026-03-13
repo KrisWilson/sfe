@@ -1,9 +1,11 @@
-Small File Exchanger
+# Small File Exchanger
 
-Small app in Go just to send files to other local devices. 
+## Small app in Go just to send files to other local devices with zero-setup. 
 
 Created in mind to use it for 5 minutes and forgot forever (unlike FTP/SMB protocols which u have to setup and authorize). 
 
+
+![Client-side](https://github.com/KrisWilson/sfe/blob/master/client.png)
 
 Created in mind of simplicity and zero-setup file share/retrieve server/client CLI app
 
@@ -24,9 +26,11 @@ Config
 
 
 Get started:
+```
+git clone https://github.com/KrisWilson/sfe
+go get sfe/cmd
+go get sfe/client
+go get sfe/listener
+go run main.go
+```
 
-> git clone https://github.com/KrisWilson/sfe
->
-> go run main.go
->
-> 
