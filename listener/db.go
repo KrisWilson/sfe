@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"sfe/settings"
+	"strings"
 	"time"
 )
 
@@ -83,7 +84,8 @@ func newToken(username string) string {
 	}
 
 	err = db.QueryRow("UPDATE users SET token = ? WHERE name = ?", token, username).Scan(&username)
-	err = db.QueryRow("UPDATE users SET timeout = ? WHERE name = ?", time.Now().Add(time.Hour*1).Format(time.DateTime), username).Scan(&username)
+	// dodajemy time.Hour*1 - raz bo jesteśmy w strefie +01:00 oraz drugi raz ponieważ token będzie ważny tyle
+	err = db.QueryRow("UPDATE users SET timeout = ? WHERE name = ?", time.Now().Add(time.Hour*1+time.Hour*1).Format(time.DateTime), username).Scan(&username)
 	return token
 }
 
@@ -103,7 +105,10 @@ func getUser(username string) (user, error) {
 func RemoveUser(username string) {
 	dsn := "file:" + settings.Load().ServerDB + ".db?cache=shared&mode=rw"
 	db, _ := sql.Open("sqlite3", dsn)
-	db.QueryRow("DELETE FROM users WHERE name = ?", username)
+	_, err := db.Exec("DELETE FROM users WHERE name = ?", username)
+	if err != nil {
+		fmt.Println("[DB] Unable to remove user")
+	}
 }
 
 func AddUser(username string, password string, userdir string) {
@@ -124,7 +129,8 @@ func AddUser(username string, password string, userdir string) {
 		fmt.Println("[DB] Unable to insert user")
 		panic(err)
 	}
-	//newToken(username)
+	// Nowy token - ustawienie tokenu DB na unique, nie mogą być 2 puste pola bo to nie są unikalne
+	newToken(username)
 
 	fmt.Println("Dodano uzytkownika " + username)
 }
@@ -149,7 +155,10 @@ func CheckToken(token string) user {
 		return u
 	}
 	now := time.Now()
-	if u.Timeout.Before(now) { // czy timeout jest po aktualnym czasie tzn później
+	fmt.Println("Now: " + now.Format(time.RFC822Z) + " :: Token: " + u.Timeout.Format(time.RFC822Z))
+	//if u.Timeout.After(now) { // czy timeout jest po aktualnym czasie tzn później
+	if now.After(u.Timeout) {
+		fmt.Println("[DB] Token expired")
 		u.ID = -1
 		return u
 	}
@@ -181,16 +190,21 @@ func ConfigDB() {
 		if err != nil {
 			panic(err.Error())
 		}
-		defer rows.Close()
+		defer func(rows *sql.Rows) {
+			err := rows.Close()
+			if err != nil {
 
-		fmt.Println("ID \t| Username \t| Password \t| Dir")
+			}
+		}(rows)
+
+		fmt.Println("ID \t| Username \t| Password \t| Dir \t| Token \t| Timeout")
 		for rows.Next() {
-			var col1, col2, col3, col4 string
-
-			if err := rows.Scan(&col1, &col2, &col3, &col4); err != nil {
+			var col1, col2, col3, col4, col5 string
+			var col6 time.Time
+			if err := rows.Scan(&col1, &col2, &col3, &col4, &col5, &col6); err != nil {
 				panic(err.Error())
 			}
-			fmt.Printf("%s \t| %s \t| %s \t| %s\n", col1, col2, col3, col4)
+			fmt.Printf("%s \t| %s \t| %s \t| %s \t| %s \t| %s\n", col1, col2, col3, col4, col5, col6.Format(time.DateTime))
 		}
 
 		if err := rows.Err(); err != nil {
@@ -198,7 +212,6 @@ func ConfigDB() {
 		}
 
 	case "2": // dodanie użytkownika
-
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Podaj nazwe uzytkownika: ")
 		username, err := reader.ReadString('\n')
@@ -220,10 +233,21 @@ func ConfigDB() {
 			fmt.Println("Błąd podczas czytania danych:", err)
 			return
 		}
+		username = strings.ReplaceAll(username, "\n", "")
+		password = strings.ReplaceAll(password, "\n", "")
+		userdir = strings.ReplaceAll(userdir, "\n", "")
 		AddUser(username, password, userdir)
 
 	case "3":
-
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("Podaj nazwe uzytkownika: ")
+		username, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Println("Błąd podczas czytania danych:", err)
+			return
+		}
+		username = strings.ReplaceAll(username, "\n", "")
+		RemoveUser(username)
 	case "X":
 		return
 

@@ -49,7 +49,7 @@ func Run() {
 	fmt.Println("[X] Exit\r")
 	fmt.Print("Your choice: ")
 	input := readKey()
-	
+
 	switch string(input) {
 	case "1":
 		config := settings.Load()
@@ -79,6 +79,8 @@ func Run() {
 		if err != nil {
 			panic(err)
 		}
+		// TODO: Dodaj http request z tokenem wygenerowanym powyżej poprzez autoryzacje
+		// TODO: Dodaj pętle, możliwość exploracji oraz pobierania plików
 
 		fmt.Println(string(bodyBytes))
 		fmt.Println("Zakonczone połączenie")

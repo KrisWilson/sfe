@@ -34,6 +34,7 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			now := time.Now()
+			// TODO: Uodpornić parametr "path" na exploracje całej przestrzenii dyskowej tj. "../../../"
 			folderPath := settings.Load().Shared + r.FormValue("path")
 			file := r.FormValue("file")
 			if file != "" {
@@ -93,7 +94,8 @@ func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 	if CheckPassword(user.Pass, user.Name) {
 		_, err := fmt.Fprintln(w, "<<Token::Authorized>>")
 		_, err = fmt.Fprintln(w, newToken(user.Name))
-		fmt.Println("[authorizeHandler] " + r.URL.Path + " " + r.Method + " " + r.RemoteAddr + " Authorized: " + user.Name)
+		now := time.Now()
+		fmt.Println(now.Format(time.DateTime) + " [authorizeHandler] " + r.URL.Path + " " + r.Method + " " + r.RemoteAddr + " Authorized: " + user.Name)
 		if err != nil {
 			return
 		}
