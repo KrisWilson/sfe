@@ -24,12 +24,12 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		var u = CheckToken(r.Header.Get("Token"))
 		if u.ID != -1 {
-			_, err := fmt.Fprintf(w, "Authorized - token accepted, Welcome "+u.Name+"\n")
-			if err != nil {
-				return
-			}
+			//		_, err := fmt.Fprintf(w, "Authorized - token accepted, Welcome "+u.Name+"\n")
+			//		if err != nil {
+			//			return
+			//		}
 
-			err = r.ParseForm()
+			err := r.ParseForm()
 			if err != nil {
 				return
 			}
@@ -40,6 +40,25 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 			// TODO: Rozdzielić logikę explorer od download file
 			// TODO: Dodać download dir
 			// TODO: Dodać wielewątków TCP w celu szybszego pobierania danych oraz weryfikacje pobierania danych
+			// TODO: poprawić logikę pobierania plików
+
+			err = os.Mkdir(settings.Load().Shared, 0777)
+			if err != nil {
+			} else {
+				err := os.Mkdir(settings.Load().Shared+"/Pics", 0777)
+				if err != nil {
+					return
+				}
+				err = os.Mkdir(settings.Load().Shared+"/Files", 0777)
+				if err != nil {
+					return
+				}
+				err = os.WriteFile(settings.Load().Shared+"/some.file", []byte("some.file's content <<>>!...!<<>>"), 0777)
+				if err != nil {
+					return
+				}
+			}
+
 			if file != "" {
 				if len(folderPath) == 0 {
 					folderPath = "/"

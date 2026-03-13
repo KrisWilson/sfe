@@ -80,10 +80,12 @@ func Run() {
 		}
 		// TODO: Dodaj http request z tokenem wygenerowanym powyżej poprzez autoryzacje
 		// TODO: Dodaj pętle, możliwość exploracji oraz pobierania plików
+		// TODO: Dodaj wielowątkową opcje TCP do pobierania danych
+		// TODO: Dodaj weryfikacje pobranych danych
 
 		token := string(bodyBytes)
 
-		fmt.Println("[client] Autoryzacja ukończona pomyślne \n[>>" + token + "<<]")
+		fmt.Println("[client] Autoryzacja ukończona pomyślne") //\n[>>" + token + "<<]")
 
 		// Test exploracji /
 		req, err = http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore", bytes.NewBuffer(data))
@@ -98,9 +100,24 @@ func Run() {
 			//panic(err)
 		}
 		bodyBytes, err = io.ReadAll(resp.Body)
-		fmt.Println(string(bodyBytes))
+		fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m")
 
-		fmt.Println("Zakonczone połączenie")
+		fmt.Println("[client] Pobieranie some.file.... \n some.file content:")
+		req, err = http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore?path=/&file=some.file", bytes.NewBuffer(data))
+		req.Header.Set("Token", token)
+		if err != nil {
+			panic(err)
+		}
+		resp, err = client.Do(req)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+			//panic(err)
+		}
+		bodyBytes, err = io.ReadAll(resp.Body)
+		fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m")
+
+		fmt.Println("\n[client] Zakonczone połączenie")
 
 	case "2":
 		listener.Host(8670)
