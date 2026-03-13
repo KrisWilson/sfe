@@ -37,6 +37,9 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 			// TODO: Uodpornić parametr "path" na exploracje całej przestrzenii dyskowej tj. "../../../"
 			folderPath := settings.Load().Shared + r.FormValue("path")
 			file := r.FormValue("file")
+			// TODO: Rozdzielić logikę explorer od download file
+			// TODO: Dodać download dir
+			// TODO: Dodać wielewątków TCP w celu szybszego pobierania danych oraz weryfikacje pobierania danych
 			if file != "" {
 				if len(folderPath) == 0 {
 					folderPath = "/"

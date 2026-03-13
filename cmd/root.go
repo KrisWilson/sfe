@@ -11,6 +11,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// TODO: Dodaj więcej CLI komend wykorzystujących już istniejące metody w innych plikach
+// TODO: removeUser, viewUsers
+// TODO: exploreDir, downloadFile, downloadDir, uploadFile, uploadDir
+// TODO: changePass from clientside
+
 var rootCmd = &cobra.Command{
 	Use:   "SmallFileExchanger",
 	Short: "Mała aplikacja do wymiany plików, ponieważ FTP/SMB setupowanie na chwile jest irytujące tylko aby użyć dla paru plików >:(",
