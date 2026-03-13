@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -75,14 +74,33 @@ func Run() {
 			}
 		}(resp.Body)
 
-		bodyBytes, err := ioutil.ReadAll(resp.Body)
+		bodyBytes, err := io.ReadAll(resp.Body)
 		if err != nil {
 			panic(err)
 		}
 		// TODO: Dodaj http request z tokenem wygenerowanym powyżej poprzez autoryzacje
 		// TODO: Dodaj pętle, możliwość exploracji oraz pobierania plików
 
+		token := string(bodyBytes)
+
+		fmt.Println("[client] Autoryzacja ukończona pomyślne \n[>>" + token + "<<]")
+
+		// Test exploracji /
+		req, err = http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore", bytes.NewBuffer(data))
+		req.Header.Set("Token", token)
+		req.Header.Add("Token", token)
+		if err != nil {
+			panic(err)
+		}
+		resp, err = client.Do(req)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+			//panic(err)
+		}
+		bodyBytes, err = io.ReadAll(resp.Body)
 		fmt.Println(string(bodyBytes))
+
 		fmt.Println("Zakonczone połączenie")
 
 	case "2":

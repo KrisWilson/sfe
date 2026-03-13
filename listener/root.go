@@ -92,8 +92,8 @@ func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if CheckPassword(user.Pass, user.Name) {
-		_, err := fmt.Fprintln(w, "<<Token::Authorized>>")
-		_, err = fmt.Fprintln(w, newToken(user.Name))
+		//		_, err := fmt.Fprintln(w, "<<Token::Authorized>>")
+		_, err = fmt.Fprint(w, newToken(user.Name))
 		now := time.Now()
 		fmt.Println(now.Format(time.DateTime) + " [authorizeHandler] " + r.URL.Path + " " + r.Method + " " + r.RemoteAddr + " Authorized: " + user.Name)
 		if err != nil {

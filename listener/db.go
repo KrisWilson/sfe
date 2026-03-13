@@ -150,12 +150,15 @@ func CheckToken(token string) user {
 	db, err := sql.Open("sqlite3", dsn)
 	var u user
 	u.ID = -1
+	//fmt.Println(token)
 	err = db.QueryRow("SELECT * FROM users WHERE token = ?", token).Scan(&u.ID, &u.Name, &u.Pass, &u.Dir, &u.Token, &u.Timeout)
 	if err != nil {
+		fmt.Println("Token not found")
 		return u
 	}
+	//fmt.Println(u.Token)
 	now := time.Now()
-	fmt.Println("Now: " + now.Format(time.RFC822Z) + " :: Token: " + u.Timeout.Format(time.RFC822Z))
+	//fmt.Println("Now: " + now.Format(time.RFC822Z) + " :: Token: " + u.Timeout.Format(time.RFC822Z))
 	//if u.Timeout.After(now) { // czy timeout jest po aktualnym czasie tzn później
 	if now.After(u.Timeout) {
 		fmt.Println("[DB] Token expired")
