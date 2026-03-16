@@ -3,6 +3,7 @@ package client
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -28,7 +29,6 @@ func ExploreDir(dir string) []byte {
 	config := settings.Load()
 	data := []byte("")
 
-	// Test exploracji /
 	req, err := http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore?path=/"+dir+"/", bytes.NewBuffer(data))
 	if req != nil {
 		req.Header.Set("Token", token)
@@ -52,7 +52,21 @@ func ExploreDir(dir string) []byte {
 	}(resp.Body)
 
 	bodyBytes, err := io.ReadAll(resp.Body)
-	fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m\r")
+	fmt.Println("\n\033[36m" + "Folder path: /" + dir + "/\u001B[0m\r")
+
+	// print raw json
+	//fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m\r")
+
+	var filesJson []listener.FileJSON
+	err = json.Unmarshal(bodyBytes, &filesJson)
+	if err != nil {
+		fmt.Println("Error unmarshaling JSON:", err, "\r")
+	}
+	for _, file := range filesJson {
+		//	fmt.Printf("Name: %s\nType: %s\nSize: %d bytes\nDate Modified: %s\n", file.Name, file.Type, file.Size, file.DateModified)
+		fmt.Printf("%s\t%s\t%s\t%s\r\n", file.Type, strconv.Itoa(int(file.Size)), file.DateModified, file.Name)
+	}
+	fmt.Println("\r")
 	return bodyBytes
 }
 
@@ -69,7 +83,7 @@ func DownloadFile(dir string, filename string, downloadDir string) {
 		dir = dir + "/"
 	}
 
-	fmt.Println("[Client] Pobieranie \u001B[33m" + filename + "\u001B[0m do folderu " + config.DownloadDir + "/" + filename + "1....\r")
+	fmt.Println("[Client] Pobieranie \u001B[33m" + filename + "\u001B[0m do folderu " + config.DownloadDir + "/" + filename + "....\r")
 	req, err := http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore?path=/"+dir+"&file="+filename, bytes.NewBuffer(data))
 	if req != nil {
 		req.Header.Set("Token", token)

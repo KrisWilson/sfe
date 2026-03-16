@@ -22,10 +22,10 @@ type UserJSON struct {
 }
 
 type FileJSON struct {
-	Name         string `json:"name"`
-	Type         string `json:"type"`
-	Size         int64  `json:"size"`
-	DateModified string `json:"dateModified"`
+	Name         string `json:"Name"`
+	Type         string `json:"Type"`
+	Size         int64  `json:"Size"`
+	DateModified string `json:"DateModified"`
 }
 
 func exploreHandler(w http.ResponseWriter, r *http.Request) {
@@ -92,10 +92,10 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				fmt.Println(now.Format(time.DateTime) + " [Explorer] " + u.Name + " accessed folder: " + folderPath + "\r")
-				_, err = fmt.Fprintf(w, "Folder path: %s\n\r", folderPath)
-				if err != nil {
-					return
-				}
+				//_, err = fmt.Fprintf(w, "Folder path: %s\n\r", folderPath)
+				//if err != nil {
+				//	return
+				//}
 
 				var filesJson []FileJSON
 
@@ -126,14 +126,11 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(200)
 
 			}
 		} else {
-			_, err := fmt.Fprintf(w, "Authorized - token not accepted"+"\r")
-			if err != nil {
-				return
-			}
+			http.Error(w, "Authorized - token not accepted", http.StatusBadRequest)
+			return
 		}
 	} else {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
