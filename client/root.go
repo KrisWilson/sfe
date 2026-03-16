@@ -11,6 +11,7 @@ import (
 	"sfe/listener"
 	"sfe/settings"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/viper"
 	"golang.org/x/term"
@@ -62,9 +63,24 @@ func ExploreDir(dir string) []byte {
 	if err != nil {
 		fmt.Println("Error unmarshaling JSON:", err, "\r")
 	}
+
+	var largestFile int64 //do sformatowania później listingu plików...
+	for _, file := range filesJson {
+		if file.Size > largestFile {
+			largestFile = file.Size
+		}
+	}
+	posNeeded := len(strconv.Itoa(int(largestFile)))
+
+	fmt.Printf("\u001B[36mType \tDate Modified\t\t%s \tname\r\u001B[0m\n\r", "Size"+strings.Repeat(" ", posNeeded-4))
 	for _, file := range filesJson {
 		//	fmt.Printf("Name: %s\nType: %s\nSize: %d bytes\nDate Modified: %s\n", file.Name, file.Type, file.Size, file.DateModified)
-		fmt.Printf("%s\t%s\t\t%s\t%s\r\n", file.Type, strconv.Itoa(int(file.Size)), file.DateModified, file.Name)
+
+		fmt.Printf("%s \t%s \t%s \t%s\r\n",
+			file.Type,
+			file.DateModified,
+			strconv.Itoa(int(file.Size))+strings.Repeat(" ", posNeeded-len(strconv.Itoa(int(file.Size)))),
+			file.Name)
 	}
 	fmt.Println("\r")
 	return bodyBytes
