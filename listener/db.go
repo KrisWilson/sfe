@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-type user struct {
+type User struct {
 	ID      int       `db:"id"`
 	Name    string    `db:"name"`
 	Pass    string    `db:"pass"`
@@ -80,7 +80,7 @@ func newToken(username string) string {
 	}
 	var token string
 	for i := 0; i < 64; i++ {
-		token = token + string('A'+rand.Intn(52))
+		token = token + string(rune('A'+rand.Intn(52)))
 	}
 
 	err = db.QueryRow("UPDATE users SET token = ? WHERE name = ?", token, username).Scan(&username)
@@ -89,12 +89,12 @@ func newToken(username string) string {
 	return token
 }
 
-func getUser(username string) (user, error) {
+func getUser(username string) (User, error) {
 
 	dsn := "file:" + settings.Load().ServerDB + ".db?cache=shared&mode=rw"
 	db, err := sql.Open("sqlite3", dsn)
 
-	var u user
+	var u User
 	err = db.QueryRow("SELECT * FROM users WHERE name = ?", username).Scan(&u.ID, &u.Name, &u.Pass, &u.Dir, &u.Token, &u.Timeout)
 	if err != nil {
 		return u, err
@@ -135,7 +135,7 @@ func AddUser(username string, password string, userdir string) {
 	fmt.Println("Dodano uzytkownika " + username)
 }
 
-// Sprawdzenie poprawności hasła użytkownika który się zgłasza w celu potwierdzenia autoryzacji
+// CheckPassword - Sprawdzenie poprawności hasła użytkownika który się zgłasza w celu potwierdzenia autoryzacji
 func CheckPassword(password string, user string) bool {
 	u, err := getUser(user)
 	if err != nil {
@@ -145,10 +145,10 @@ func CheckPassword(password string, user string) bool {
 	return u.Pass == password
 }
 
-func CheckToken(token string) user {
+func CheckToken(token string) User {
 	dsn := "file:" + settings.Load().ServerDB + ".db?cache=shared&mode=rw"
 	db, err := sql.Open("sqlite3", dsn)
-	var u user
+	var u User
 	u.ID = -1
 	//fmt.Println(token)
 	err = db.QueryRow("SELECT * FROM users WHERE token = ?", token).Scan(&u.ID, &u.Name, &u.Pass, &u.Dir, &u.Token, &u.Timeout)
@@ -175,7 +175,7 @@ func readKey() rune {
 }
 
 func ConfigDB() {
-
+	InitDB(settings.Load().ServerDB)
 	fmt.Println("\033[31m<<< \u001B[0mSFE - DB Config SFE \u001B[31m>>>\u001B[0m\r")
 	fmt.Println("[1] Show users from sqlite database\r")
 	fmt.Println("[2] Add user\r")

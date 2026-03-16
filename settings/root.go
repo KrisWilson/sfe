@@ -65,7 +65,3 @@ func Load() Config {
 
 	return loaded
 }
-
-func PassVerify(pass string) bool {
-	return viper.Get("serverpass").(string) == pass
-}

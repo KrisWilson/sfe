@@ -4,7 +4,7 @@ import (
 	_ "database/sql"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -15,7 +15,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type User struct {
+type UserJSON struct {
 	Name string `json:"user"`
 	Pass string `json:"pass"`
 }
@@ -73,21 +73,36 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 				files, err := os.ReadDir(folderPath)
 				if err != nil {
 					fmt.Println("Error reading directory:", err)
-					fmt.Fprintln(w, "Error reading directory")
+					_, err := fmt.Fprintln(w, "Error reading directory")
+					if err != nil {
+						return
+					}
 					return
 				}
 				fmt.Println(now.Format(time.DateTime) + " [Explorer] " + u.Name + " accessed folder: " + folderPath)
-				fmt.Fprintf(w, "Folder path: %s\n", folderPath)
+				_, err = fmt.Fprintf(w, "Folder path: %s\n", folderPath)
+				if err != nil {
+					return
+				}
 				for _, file := range files {
 					if file.IsDir() {
-						fmt.Fprintf(w, "Folder\t"+file.Name()+"\n")
+						_, err2 := fmt.Fprintf(w, "Folder\t"+file.Name()+"\n")
+						if err2 != nil {
+							return
+						}
 					} else {
-						fmt.Fprintf(w, "File\t"+file.Name()+"\n")
+						_, err := fmt.Fprintf(w, "File\t"+file.Name()+"\n")
+						if err != nil {
+							return
+						}
 					}
 				}
 			}
 		} else {
-			fmt.Fprintf(w, "Authorized - token not accepted")
+			_, err := fmt.Fprintf(w, "Authorized - token not accepted")
+			if err != nil {
+				return
+			}
 		}
 	} else {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -100,13 +115,13 @@ func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
 	}
-	bodyBytes, err := ioutil.ReadAll(r.Body)
+	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	var user User
+	var user UserJSON
 	err = json.Unmarshal(bodyBytes, &user)
 	if err != nil {
 		http.Error(w, "Invalid request format", http.StatusBadRequest)
@@ -129,27 +144,36 @@ func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func usersHandler(w http.ResponseWriter, r *http.Request) {
-	_, err := fmt.Fprintln(w, "List of users...")
-	if err != nil {
-		return
-	}
-}
+//
+//func usersHandler(w http.ResponseWriter, r *http.Request) {
+//	_, err := fmt.Fprintln(w, "List of users...")
+//	if err != nil {
+//		return
+//	}
+//}
 
 func Host(port int) {
 	config := settings.Load()
 	InitDB(config.ServerDB)
 
 	http.HandleFunc("/authorize", authorizeHandler)
-	http.HandleFunc("/users", usersHandler)
+	//	http.HandleFunc("/users", usersHandler)
 	http.HandleFunc("/explore", exploreHandler)
 
 	log.Printf("Listening on port %d\n", config.ServerPort)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
 
-	err := http.ListenAndServe(":"+strconv.Itoa(config.ServerPort), nil)
-	if err != nil {
-		panic(err)
+	if port != -1 {
+		err := http.ListenAndServe(":"+strconv.Itoa(port), nil)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		err := http.ListenAndServe(":"+strconv.Itoa(config.ServerPort), nil)
+		if err != nil {
+			panic(err)
+		}
 	}
+
 }

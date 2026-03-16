@@ -89,7 +89,9 @@ func Run() {
 
 		// Test exploracji /
 		req, err = http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore", bytes.NewBuffer(data))
-		req.Header.Set("Token", token)
+		if req != nil {
+			req.Header.Set("Token", token)
+		}
 		if err != nil {
 			panic(err)
 		}
@@ -104,7 +106,10 @@ func Run() {
 
 		fmt.Println("[client] Pobieranie some.file.... \n some.file content:")
 		req, err = http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore?path=/&file=some.file", bytes.NewBuffer(data))
-		req.Header.Set("Token", token)
+		if req != nil {
+			req.Header.Set("Token", token)
+		}
+
 		if err != nil {
 			panic(err)
 		}
@@ -120,7 +125,7 @@ func Run() {
 		fmt.Println("\n[client] Zakonczone połączenie")
 
 	case "2":
-		listener.Host(8670)
+		listener.Host(-1)
 
 	case "3":
 		config := settings.Load()
@@ -147,6 +152,7 @@ func Run() {
 
 	case "4":
 		listener.ConfigDB()
+
 	case "X":
 		fmt.Println("Exiting...")
 		os.Exit(0)
