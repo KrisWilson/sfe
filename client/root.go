@@ -64,7 +64,7 @@ func ExploreDir(dir string) []byte {
 	}
 	for _, file := range filesJson {
 		//	fmt.Printf("Name: %s\nType: %s\nSize: %d bytes\nDate Modified: %s\n", file.Name, file.Type, file.Size, file.DateModified)
-		fmt.Printf("%s\t%s\t%s\t%s\r\n", file.Type, strconv.Itoa(int(file.Size)), file.DateModified, file.Name)
+		fmt.Printf("%s\t%s\t\t%s\t%s\r\n", file.Type, strconv.Itoa(int(file.Size)), file.DateModified, file.Name)
 	}
 	fmt.Println("\r")
 	return bodyBytes
@@ -159,8 +159,6 @@ func ConnectServer() {
 	token = string(bodyBytes)
 
 	fmt.Println("[Client] Autoryzacja ukończona pomyślne\r") //\n[>>" + token + "<<]")
-	ExploreDir("Pics")
-	DownloadFile("Pics", "cute.jpg", "")
 }
 
 func Run() {
@@ -199,6 +197,8 @@ func Run() {
 	switch string(input) {
 	case "1": // Connect to server
 		ConnectServer()
+		ExploreDir("Pics")
+		DownloadFile("Pics", "cute.jpg", "")
 	case "2": // Start server
 		fmt.Println("\u001B[31mPress Ctrl+C to quit\u001B[0m\r")
 		go listener.Host(-1)

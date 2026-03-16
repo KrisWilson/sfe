@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"sfe/listener"
+	"sfe/client"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -11,10 +12,11 @@ import (
 
 var exploreDirCmd = &cobra.Command{
 	Use:   "explore",
-	Short: "Pobiera informacje o zadanym folderze i zwraca informacje",
-	Long:  "Pobiera informacje o zadanym folderze i zwraca informacje",
-	//Args:  cobra.ExactArgs(0),
+	Short: "[{path}] Pobiera informacje o zadanym folderze i zwraca informacje",
+	Long:  "[{path}] Pobiera informacje o zadanym folderze i zwraca informacje",
 	Run: func(cmd *cobra.Command, args []string) {
-		listener.ConfigDB(2)
+		client.ConnectServer()
+
+		client.ExploreDir(strings.Join(args, " "))
 	},
 }
