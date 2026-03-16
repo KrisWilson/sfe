@@ -5,7 +5,7 @@
 Created in mind to use it for 5 minutes and forgot forever (unlike FTP/SMB protocols which u have to setup and authorize). 
 
 
-![Client-side](https://github.com/KrisWilson/sfe/blob/master/client.png)
+![Client-side image](https://github.com/KrisWilson/sfe/blob/master/client.png)
 
 Created in mind of simplicity and zero-setup file share/retrieve server/client CLI app
 
