@@ -11,8 +11,6 @@ import (
 )
 
 // TODO: Dodaj więcej CLI komend wykorzystujących już istniejące metody w innych plikach
-// TODO: exploreDir, downloadFile, downloadDir, uploadFile, uploadDir
-// TODO: changePass from clientside
 
 var rootCmd = &cobra.Command{
 	Use:   "SmallFileExchanger",
@@ -41,42 +39,20 @@ var serverCmd = &cobra.Command{
 	},
 }
 
-var addUserCmd = &cobra.Command{
-	Use:   "add",
-	Short: "Dodaj uzytkownika do bazy danych",
-	Long:  " ",
-	//Args:  cobra.ExactArgs(0),
-	Run: func(cmd *cobra.Command, args []string) {
-		listener.ConfigDB(2)
-	},
-}
-
-var rmUserCmd = &cobra.Command{
-	Use:   "rm",
-	Short: "Usuń użytkownika z bazy danych",
-	Long:  " ",
-	//Args:  cobra.ExactArgs(0),
-	Run: func(cmd *cobra.Command, args []string) {
-		listener.ConfigDB(3)
-	},
-}
-
-var viewUsersCmd = &cobra.Command{
-	Use:   "view",
-	Short: "Wyswietl baze danych",
-	Long:  " ",
-	Run: func(cmd *cobra.Command, args []string) {
-		listener.ConfigDB(1)
-	},
-}
-
 func init() {
+
+	// Server command
 	serverCmd.Flags().IntP("port", "p", 7068, "Server port")
 	serverCmd.Aliases = []string{"host", "listen"}
 	rootCmd.AddCommand(serverCmd)
+
+	// Database commands
 	rootCmd.AddCommand(addUserCmd)
 	rootCmd.AddCommand(rmUserCmd)
 	rootCmd.AddCommand(viewUsersCmd)
+
+	// Client commands
+	rootCmd.AddCommand(exploreDirCmd)
 
 	// Dodaj komendę zatrzymującą serwer HTTP
 	stopCmd := &cobra.Command{
