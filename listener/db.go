@@ -174,15 +174,18 @@ func readKey() rune {
 	return char
 }
 
-func ConfigDB() {
+func ConfigDB(preselect int) {
 	InitDB(settings.Load().ServerDB)
-	fmt.Println("\033[31m<<< \u001B[0mSFE - DB Config SFE \u001B[31m>>>\u001B[0m\r")
-	fmt.Println("[1] Show users from sqlite database\r")
-	fmt.Println("[2] Add user\r")
-	fmt.Println("[3] Remove user\r")
-	fmt.Println("[X] Exit\r")
-	fmt.Print("Your choice: ")
-	input := readKey()
+	input := rune(preselect + '0')
+	if preselect == 0 {
+		fmt.Println("\033[31m<<< \u001B[0mSFE - DB Config SFE \u001B[31m>>>\u001B[0m\r")
+		fmt.Println("[1] Show users from sqlite database\r")
+		fmt.Println("[2] Add user\r")
+		fmt.Println("[3] Remove user\r")
+		fmt.Println("[X] Exit\r")
+		fmt.Print("Your choice: ")
+		input = readKey()
+	}
 
 	switch string(input) {
 	case "1": // pokazanie wszystkich uzytkowników
@@ -259,7 +262,7 @@ func ConfigDB() {
 		fmt.Print("<< Press enter to continue\n")
 		reader := bufio.NewReader(os.Stdin)
 		_, _, _ = reader.ReadRune()
-		ConfigDB()
+		ConfigDB(0)
 	}
 
 }

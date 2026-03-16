@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"os"
@@ -12,7 +11,6 @@ import (
 )
 
 // TODO: Dodaj więcej CLI komend wykorzystujących już istniejące metody w innych plikach
-// TODO: removeUser, viewUsers
 // TODO: exploreDir, downloadFile, downloadDir, uploadFile, uploadDir
 // TODO: changePass from clientside
 
@@ -43,45 +41,42 @@ var serverCmd = &cobra.Command{
 	},
 }
 
-var addCmd = &cobra.Command{
+var addUserCmd = &cobra.Command{
 	Use:   "add",
 	Short: "Dodaj uzytkownika do bazy danych",
 	Long:  " ",
 	//Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
+		listener.ConfigDB(2)
+	},
+}
 
-		reader := bufio.NewReader(os.Stdin)
+var rmUserCmd = &cobra.Command{
+	Use:   "rm",
+	Short: "Usuń użytkownika z bazy danych",
+	Long:  " ",
+	//Args:  cobra.ExactArgs(0),
+	Run: func(cmd *cobra.Command, args []string) {
+		listener.ConfigDB(3)
+	},
+}
 
-		fmt.Print("Podaj nazwe uzytkownika: ")
-		username, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Println("Błąd podczas czytania danych:", err)
-			return
-		}
-
-		fmt.Print("Podaj hasło uzytkownika: ")
-		password, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Println("Błąd podczas czytania danych:", err)
-			return
-		}
-
-		fmt.Print("Podaj folder uzytkownika [default=username]: ")
-		userdir, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Println("Błąd podczas czytania danych:", err)
-			return
-		}
-
-		listener.AddUser(username, password, userdir)
+var viewUsersCmd = &cobra.Command{
+	Use:   "view",
+	Short: "Wyswietl baze danych",
+	Long:  " ",
+	Run: func(cmd *cobra.Command, args []string) {
+		listener.ConfigDB(1)
 	},
 }
 
 func init() {
-	serverCmd.Flags().IntP("port", "p", 8670, "Server port")
+	serverCmd.Flags().IntP("port", "p", 7068, "Server port")
 	serverCmd.Aliases = []string{"host", "listen"}
 	rootCmd.AddCommand(serverCmd)
-	rootCmd.AddCommand(addCmd)
+	rootCmd.AddCommand(addUserCmd)
+	rootCmd.AddCommand(rmUserCmd)
+	rootCmd.AddCommand(viewUsersCmd)
 
 	// Dodaj komendę zatrzymującą serwer HTTP
 	stopCmd := &cobra.Command{

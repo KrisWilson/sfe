@@ -78,6 +78,7 @@ func Run() {
 		if err != nil {
 			panic(err)
 		}
+
 		// TODO: Dodaj http request z tokenem wygenerowanym powyżej poprzez autoryzacje
 		// TODO: Dodaj pętle, możliwość exploracji oraz pobierania plików
 		// TODO: Dodaj wielowątkową opcje TCP do pobierania danych
@@ -101,6 +102,13 @@ func Run() {
 			os.Exit(1)
 			//panic(err)
 		}
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+
+			}
+		}(resp.Body)
+
 		bodyBytes, err = io.ReadAll(resp.Body)
 		fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m")
 
@@ -119,6 +127,12 @@ func Run() {
 			os.Exit(1)
 			//panic(err)
 		}
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+
+			}
+		}(resp.Body)
 		bodyBytes, err = io.ReadAll(resp.Body)
 		fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m")
 
@@ -151,7 +165,7 @@ func Run() {
 		Run()
 
 	case "4":
-		listener.ConfigDB()
+		listener.ConfigDB(0)
 
 	case "X":
 		fmt.Println("Exiting...")
