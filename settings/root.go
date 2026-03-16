@@ -11,13 +11,13 @@ type Config struct {
 	ServerPort int
 	ServerPass string
 	ServerDB   string
-	Shared     string
+	SharedDir  string
 	// client
-	ClientPort int
-	ConnectIP  string
-	UserPass   string
-	UserName   string
-	Downloads  string
+	ClientPort  int
+	ConnectIP   string
+	UserPass    string
+	UserName    string
+	DownloadDir string
 }
 
 func Load() Config {
@@ -54,13 +54,13 @@ func Load() Config {
 		ServerPort: viper.GetInt("serverport"),
 		ServerPass: viper.GetString("serverpass"),
 		ServerDB:   viper.GetString("serverdb"),
-		Shared:     viper.GetString("shared"),
+		SharedDir:  viper.GetString("shared"),
 		// client config properties
-		ClientPort: viper.GetInt("clientport"),
-		ConnectIP:  viper.GetString("connectip"),
-		UserPass:   viper.GetString("userpass"),
-		UserName:   viper.GetString("username"),
-		Downloads:  viper.GetString("download"),
+		ClientPort:  viper.GetInt("clientport"),
+		ConnectIP:   viper.GetString("connectip"),
+		UserPass:    viper.GetString("userpass"),
+		UserName:    viper.GetString("username"),
+		DownloadDir: viper.GetString("download"),
 	}
 
 	return loaded

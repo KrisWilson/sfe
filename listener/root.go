@@ -35,25 +35,25 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			now := time.Now()
 			// TODO: Uodpornić parametr "path" na exploracje całej przestrzenii dyskowej tj. "../../../"
-			folderPath := settings.Load().Shared + r.FormValue("path")
+			folderPath := settings.Load().SharedDir + r.FormValue("path")
 			file := r.FormValue("file")
 			// TODO: Rozdzielić logikę explorer od download file
 			// TODO: Dodać download dir
 			// TODO: Dodać wielewątków TCP w celu szybszego pobierania danych oraz weryfikacje pobierania danych
 			// TODO: poprawić logikę pobierania plików
 
-			err = os.Mkdir(settings.Load().Shared, 0777)
+			err = os.Mkdir(settings.Load().SharedDir, 0777)
 			if err != nil {
 			} else {
-				err := os.Mkdir(settings.Load().Shared+"/Pics", 0777)
+				err := os.Mkdir(settings.Load().SharedDir+"/Pics", 0777)
 				if err != nil {
 					return
 				}
-				err = os.Mkdir(settings.Load().Shared+"/Files", 0777)
+				err = os.Mkdir(settings.Load().SharedDir+"/Files", 0777)
 				if err != nil {
 					return
 				}
-				err = os.WriteFile(settings.Load().Shared+"/some.file", []byte("some.file's content <<>>!...!<<>>"), 0777)
+				err = os.WriteFile(settings.Load().SharedDir+"/some.file", []byte("some.file's content <<>>!...!<<>>"), 0777)
 				if err != nil {
 					return
 				}
@@ -72,26 +72,26 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				files, err := os.ReadDir(folderPath)
 				if err != nil {
-					fmt.Println("Error reading directory:", err)
-					_, err := fmt.Fprintln(w, "Error reading directory")
+					fmt.Println("Error reading directory:\r", err, "\r")
+					_, err := fmt.Fprintln(w, "Error reading directory "+folderPath+"\r")
 					if err != nil {
 						return
 					}
 					return
 				}
 				fmt.Println(now.Format(time.DateTime) + " [Explorer] " + u.Name + " accessed folder: " + folderPath + "\r")
-				_, err = fmt.Fprintf(w, "Folder path: %s\n", folderPath)
+				_, err = fmt.Fprintf(w, "Folder path: %s\n\r", folderPath)
 				if err != nil {
 					return
 				}
 				for _, file := range files {
 					if file.IsDir() {
-						_, err2 := fmt.Fprintf(w, "Folder\t"+file.Name()+"\n")
+						_, err2 := fmt.Fprintf(w, "Folder\t"+file.Name()+"\n\r")
 						if err2 != nil {
 							return
 						}
 					} else {
-						_, err := fmt.Fprintf(w, "File\t"+file.Name()+"\n")
+						_, err := fmt.Fprintf(w, "File\t"+file.Name()+"\n\r")
 						if err != nil {
 							return
 						}

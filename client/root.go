@@ -21,6 +21,79 @@ func readKey() rune {
 	return char
 }
 
+var token string
+
+func ExploreDir(dir string) []byte {
+
+	config := settings.Load()
+	data := []byte("")
+
+	// Test exploracji /
+	req, err := http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore?path=/"+dir+"/", bytes.NewBuffer(data))
+	if req != nil {
+		req.Header.Set("Token", token)
+	}
+	if err != nil {
+		panic(err)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+		//panic(err)
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m\r")
+	return bodyBytes
+}
+
+func DownloadFile(dir string, filename string, downloadDir string) {
+
+	config := settings.Load()
+	data := []byte("")
+	if len(dir) > 0 {
+		dir = dir + "/"
+	}
+
+	fmt.Println("[client] Pobieranie " + filename + "....\n\r" + filename + " content:\r")
+	req, err := http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore?path=/"+dir+"&file="+filename, bytes.NewBuffer(data))
+	if req != nil {
+		req.Header.Set("Token", token)
+	}
+
+	if err != nil {
+		panic(err)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+		//panic(err)
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
+	bodyBytes, err := io.ReadAll(resp.Body)
+	os.WriteFile(config.DownloadDir+"/"+filename+".txt", bodyBytes, os.ModePerm)
+	fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m\r")
+
+	fmt.Println("\n[client] Zakonczone połączenie\r")
+}
+
 func ConnectServer() {
 	// load settings
 	config := settings.Load()
@@ -58,60 +131,11 @@ func ConnectServer() {
 	// TODO: Dodaj wielowątkową opcje TCP do pobierania danych
 	// TODO: Dodaj weryfikacje pobranych danych
 
-	token := string(bodyBytes)
+	token = string(bodyBytes)
 
 	fmt.Println("[client] Autoryzacja ukończona pomyślne\r") //\n[>>" + token + "<<]")
-
-	// Test exploracji /
-	req, err = http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore", bytes.NewBuffer(data))
-	if req != nil {
-		req.Header.Set("Token", token)
-	}
-	if err != nil {
-		panic(err)
-	}
-	resp, err = client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-		//panic(err)
-	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-
-		}
-	}(resp.Body)
-
-	bodyBytes, err = io.ReadAll(resp.Body)
-	fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m\r")
-
-	fmt.Println("[client] Pobieranie some.file.... \n some.file content:\r")
-	req, err = http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore?path=/&file=some.file", bytes.NewBuffer(data))
-	if req != nil {
-		req.Header.Set("Token", token)
-	}
-
-	if err != nil {
-		panic(err)
-	}
-	resp, err = client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-		//panic(err)
-	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-
-		}
-	}(resp.Body)
-	bodyBytes, err = io.ReadAll(resp.Body)
-	fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m\r")
-
-	fmt.Println("\n[client] Zakonczone połączenie\r")
-
+	ExploreDir("Pics")
+	DownloadFile("Pics", "cute.jpg", "")
 }
 
 func Run() {
@@ -171,14 +195,14 @@ func Run() {
 		fmt.Println("\tServer Config:\r")
 		fmt.Printf("Server Port: \u001B[31m%d\n\r\u001B[0m", config.ServerPort)
 		fmt.Printf("Server DB: \u001B[31m%s\n\r\u001B[0m", config.ServerDB)
-		fmt.Printf("Shared: \u001B[31m%s\n\n\r\u001B[0m", config.Shared)
+		fmt.Printf("SharedDir: \u001B[31m%s\n\n\r\u001B[0m", config.SharedDir)
 
 		fmt.Println("\tClient Config:\r")
 		fmt.Printf("Connect IP: \u001B[31m%s\n\r\u001B[0m", config.ConnectIP)
 		fmt.Printf("Connect Port: \u001B[31m%d\n\r\u001B[0m", config.ClientPort)
 		fmt.Printf("Username: \u001B[31m%s\n\r\u001B[0m", config.UserName)
 		fmt.Printf("Userpass: \u001B[31m%s\n\r\u001B[0m", config.UserPass)
-		fmt.Printf("Downloads: \u001B[31m%s\n\r\u001B[0m", config.Downloads)
+		fmt.Printf("DownloadDir: \u001B[31m%s\n\r\u001B[0m", config.DownloadDir)
 
 		fmt.Print("<< Press enter to continue\n\r")
 		reader := bufio.NewReader(os.Stdin)
