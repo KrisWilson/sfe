@@ -10,6 +10,7 @@ import (
 	"os"
 	"sfe/settings"
 	"strconv"
+	"strings"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -35,8 +36,11 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			now := time.Now()
 			// TODO: Uodpornić parametr "path" na exploracje całej przestrzenii dyskowej tj. "../../../"
+			// TODO: Zgłębić temat czy wykonywanie os.Mkdir etc. zezwala na overbuffer/injection do shella
 			folderPath := settings.Load().SharedDir + r.FormValue("path")
+			folderPath = strings.Replace(folderPath, "..", ".", -1)
 			file := r.FormValue("file")
+			file = strings.Replace(file, "..", ".", -1)
 			// TODO: Rozdzielić logikę explorer od download file
 			// TODO: Dodać download dir
 			// TODO: Dodać wielewątków TCP w celu szybszego pobierania danych oraz weryfikacje pobierania danych
