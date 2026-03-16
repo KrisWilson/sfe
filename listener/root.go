@@ -21,6 +21,13 @@ type UserJSON struct {
 	Pass string `json:"pass"`
 }
 
+type FileJSON struct {
+	Name         string `json:"name"`
+	Type         string `json:"type"`
+	Size         int64  `json:"size"`
+	DateModified string `json:"dateModified"`
+}
+
 func exploreHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		var u = CheckToken(r.Header.Get("Token"))
@@ -63,6 +70,7 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 
+			// Zdefiniowany plik - wystawiamy plik do pobrania
 			if file != "" {
 				if len(folderPath) == 0 {
 					folderPath = "/"
@@ -73,7 +81,7 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					return
 				}
-			} else {
+			} else { // Brak zdefiniowanego pliku - tutaj jest logika listingu plików w folderze
 				files, err := os.ReadDir(folderPath)
 				if err != nil {
 					fmt.Println("Error reading directory:\r", err, "\r")
@@ -88,19 +96,38 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					return
 				}
+
+				var filesJson []FileJSON
+
 				for _, file := range files {
+
+					fileInfo, _ := os.Stat(folderPath + file.Name())
 					if file.IsDir() {
-						_, err2 := fmt.Fprintf(w, "Folder\t"+file.Name()+"\n\r")
-						if err2 != nil {
-							return
-						}
+						filesJson = append(filesJson, FileJSON{
+							Name:         fileInfo.Name(),
+							Type:         "Folder",
+							Size:         0,
+							DateModified: fileInfo.ModTime().Format("2006-01-02 15:04:05"),
+						})
 					} else {
-						_, err := fmt.Fprintf(w, "File\t"+file.Name()+"\n\r")
-						if err != nil {
-							return
-						}
+						filesJson = append(filesJson, FileJSON{
+							Name:         fileInfo.Name(),
+							Type:         "File",
+							Size:         fileInfo.Size(),
+							DateModified: fileInfo.ModTime().Format("2006-01-02 15:04:05"),
+						})
 					}
 				}
+
+				encoder := json.NewEncoder(w)
+				err2 := encoder.Encode(&filesJson)
+				if err2 != nil {
+					http.Error(w, "Internal Server Error", 500)
+					return
+				}
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(200)
+
 			}
 		} else {
 			_, err := fmt.Fprintf(w, "Authorized - token not accepted"+"\r")
