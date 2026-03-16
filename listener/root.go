@@ -160,16 +160,16 @@ func Host(port int) {
 	//	http.HandleFunc("/users", usersHandler)
 	http.HandleFunc("/explore", exploreHandler)
 
-	log.Printf("Listening on port %d\n", config.ServerPort)
-
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
 
 	if port != -1 {
+		log.Printf("Listening on port %d\n", port)
 		err := http.ListenAndServe(":"+strconv.Itoa(port), nil)
 		if err != nil {
 			panic(err)
 		}
 	} else {
+		log.Printf("Listening on port %d\n", config.ServerPort)
 		err := http.ListenAndServe(":"+strconv.Itoa(config.ServerPort), nil)
 		if err != nil {
 			panic(err)
