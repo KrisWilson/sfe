@@ -59,12 +59,17 @@ func ExploreDir(dir string) []byte {
 func DownloadFile(dir string, filename string, downloadDir string) {
 
 	config := settings.Load()
+
+	err := os.Mkdir(config.DownloadDir+"/"+downloadDir, os.ModePerm)
+	if err != nil {
+		// its ok, po prostu folder istnieje, Albo ma jakiś mentalny problem tj. nie moze pisac w folderze
+	}
 	data := []byte("")
 	if len(dir) > 0 {
 		dir = dir + "/"
 	}
 
-	fmt.Println("[client] Pobieranie " + filename + "....\n\r" + filename + " content:\r")
+	fmt.Println("[Client] Pobieranie \u001B[33m" + filename + "\u001B[0m do folderu " + config.DownloadDir + "/" + filename + "1....\r")
 	req, err := http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore?path=/"+dir+"&file="+filename, bytes.NewBuffer(data))
 	if req != nil {
 		req.Header.Set("Token", token)
@@ -88,10 +93,16 @@ func DownloadFile(dir string, filename string, downloadDir string) {
 		}
 	}(resp.Body)
 	bodyBytes, err := io.ReadAll(resp.Body)
-	os.WriteFile(config.DownloadDir+"/"+filename+".txt", bodyBytes, os.ModePerm)
-	fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m\r")
+	err = os.WriteFile(config.DownloadDir+"/"+filename, bodyBytes, os.ModePerm)
+	if err != nil {
+		fmt.Println("[Client] \u001B[31mPobieranie niepowiodło się\r", err, "\r\u001B[0m")
+	} else {
+		fmt.Println("[Client] \u001B[36mPobieranie powiodło się\r\u001B[0m")
+	}
 
-	fmt.Println("\n[client] Zakonczone połączenie\r")
+	//fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m\r")
+
+	fmt.Println("\n[Client] Zakonczone połączenie\r")
 }
 
 func ConnectServer() {
@@ -133,7 +144,7 @@ func ConnectServer() {
 
 	token = string(bodyBytes)
 
-	fmt.Println("[client] Autoryzacja ukończona pomyślne\r") //\n[>>" + token + "<<]")
+	fmt.Println("[Client] Autoryzacja ukończona pomyślne\r") //\n[>>" + token + "<<]")
 	ExploreDir("Pics")
 	DownloadFile("Pics", "cute.jpg", "")
 }
