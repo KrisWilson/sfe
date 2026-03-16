@@ -7,12 +7,12 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strconv"
-
 	"sfe/listener"
 	"sfe/settings"
+	"strconv"
 
 	"github.com/spf13/viper"
+	"golang.org/x/term"
 )
 
 func readKey() rune {
@@ -21,16 +21,114 @@ func readKey() rune {
 	return char
 }
 
+func ConnectServer() {
+	// load settings
+	config := settings.Load()
+
+	// create json payload to authorize
+	data := []byte(`{"pass":"` + config.UserPass + `",` + `"user":"` + config.UserName + `"` + `}`)
+	req, err := http.NewRequest(http.MethodPost, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/authorize", bytes.NewBuffer(data))
+	if err != nil {
+		panic(err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+		//panic(err)
+	}
+
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+		}
+	}(resp.Body)
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	// TODO: Dodaj http request z tokenem wygenerowanym powyżej poprzez autoryzacje
+	// TODO: Dodaj pętle, możliwość exploracji oraz pobierania plików
+	// TODO: Dodaj wielowątkową opcje TCP do pobierania danych
+	// TODO: Dodaj weryfikacje pobranych danych
+
+	token := string(bodyBytes)
+
+	fmt.Println("[client] Autoryzacja ukończona pomyślne\r") //\n[>>" + token + "<<]")
+
+	// Test exploracji /
+	req, err = http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore", bytes.NewBuffer(data))
+	if req != nil {
+		req.Header.Set("Token", token)
+	}
+	if err != nil {
+		panic(err)
+	}
+	resp, err = client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+		//panic(err)
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
+
+	bodyBytes, err = io.ReadAll(resp.Body)
+	fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m\r")
+
+	fmt.Println("[client] Pobieranie some.file.... \n some.file content:\r")
+	req, err = http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore?path=/&file=some.file", bytes.NewBuffer(data))
+	if req != nil {
+		req.Header.Set("Token", token)
+	}
+
+	if err != nil {
+		panic(err)
+	}
+	resp, err = client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+		//panic(err)
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
+	bodyBytes, err = io.ReadAll(resp.Body)
+	fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m\r")
+
+	fmt.Println("\n[client] Zakonczone połączenie\r")
+
+}
+
 func Run() {
 
-	//// switch stdin into 'raw' mode
-	//oldState, err := term.MakeRaw(in t(os.Stdin.Fd()))
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return
-	//}
-	//
-	//defer term.Restore(int(os.Stdin.Fd()), oldState)
+	// switch stdin into 'raw' mode
+	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	defer func(fd int, oldState *term.State) {
+		err := term.Restore(fd, oldState)
+		if err != nil {
+
+		}
+	}(int(os.Stdin.Fd()), oldState)
 
 	//b := make([]byte, 1)
 	//_, err = os.Stdin.Read(b)
@@ -41,139 +139,69 @@ func Run() {
 	//fmt.Printf("the char %q was hit", string(b[0]))
 
 	fmt.Println("\033[31m<<< \u001B[0mSFE - Small File Exchanger \u001B[31m>>>\u001B[0m\r")
-	fmt.Println("[1] Connect to Server\r")
-	fmt.Println("[2] Host a server\r")
-	fmt.Println("[3] Show config\r")
-	fmt.Println("[4] Config DB\r")
-	fmt.Println("[X] Exit\r")
-	fmt.Print("Your choice: ")
+	fmt.Println("[\u001B[31m1\u001B[0m] Connect to Server\r")
+	fmt.Println("[\u001B[31m2\u001B[0m] Host a server\r")
+	fmt.Println("[\u001B[31m3\u001B[0m] Show config\r")
+	fmt.Println("[\u001B[31m4\u001B[0m] Config DB\r")
+	fmt.Println("[\u001B[31mX\u001B[0m] Exit\r")
+	//	fmt.Print("Your choice: \r")
 	input := readKey()
 
 	switch string(input) {
-	case "1":
-		config := settings.Load()
-		data := []byte(`{"pass":"` + config.UserPass + `",` + `"user":"` + config.UserName + `"` + `}`)
-
-		req, err := http.NewRequest(http.MethodPost, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/authorize", bytes.NewBuffer(data))
-		if err != nil {
-			panic(err)
-		}
-
-		req.Header.Set("Content-Type", "application/json")
-
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-			//panic(err)
-		}
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
+	case "1": // Connect to server
+		ConnectServer()
+	case "2": // Start server
+		fmt.Println("\u001B[31mPress Ctrl+C to quit\u001B[0m\r")
+		go listener.Host(-1)
+		for {
+			input := readKey()
+			if input == 3 {
+				fmt.Println("\u001B[31mCtrl+C detected, now exit...\u001B[0m\r")
+				os.Exit(0)
+			} else {
+				fmt.Println("Key pressed " + strconv.Itoa(int(input)) + "\r")
 			}
-		}(resp.Body)
-
-		bodyBytes, err := io.ReadAll(resp.Body)
-		if err != nil {
-			panic(err)
 		}
 
-		// TODO: Dodaj http request z tokenem wygenerowanym powyżej poprzez autoryzacje
-		// TODO: Dodaj pętle, możliwość exploracji oraz pobierania plików
-		// TODO: Dodaj wielowątkową opcje TCP do pobierania danych
-		// TODO: Dodaj weryfikacje pobranych danych
-
-		token := string(bodyBytes)
-
-		fmt.Println("[client] Autoryzacja ukończona pomyślne") //\n[>>" + token + "<<]")
-
-		// Test exploracji /
-		req, err = http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore", bytes.NewBuffer(data))
-		if req != nil {
-			req.Header.Set("Token", token)
-		}
-		if err != nil {
-			panic(err)
-		}
-		resp, err = client.Do(req)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-			//panic(err)
-		}
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-
-			}
-		}(resp.Body)
-
-		bodyBytes, err = io.ReadAll(resp.Body)
-		fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m")
-
-		fmt.Println("[client] Pobieranie some.file.... \n some.file content:")
-		req, err = http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore?path=/&file=some.file", bytes.NewBuffer(data))
-		if req != nil {
-			req.Header.Set("Token", token)
-		}
-
-		if err != nil {
-			panic(err)
-		}
-		resp, err = client.Do(req)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-			//panic(err)
-		}
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-
-			}
-		}(resp.Body)
-		bodyBytes, err = io.ReadAll(resp.Body)
-		fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m")
-
-		fmt.Println("\n[client] Zakonczone połączenie")
-
-	case "2":
-		listener.Host(-1)
-
-	case "3":
+	case "3": // Print config
 		config := settings.Load()
 
-		fmt.Println("")
-		fmt.Printf("File loaded: %s\n", viper.ConfigFileUsed())
-		fmt.Println("\tServer Config:")
-		fmt.Printf("Server Port: %d\n", config.ServerPort)
-		fmt.Printf("Server DB: %s\n", config.ServerDB)
-		fmt.Printf("Shared: %s\n\n", config.Shared)
+		fmt.Println("\r")
+		fmt.Printf("File loaded: \u001B[31m%s\n\r\u001B[0m", viper.ConfigFileUsed())
+		fmt.Println("\tServer Config:\r")
+		fmt.Printf("Server Port: \u001B[31m%d\n\r\u001B[0m", config.ServerPort)
+		fmt.Printf("Server DB: \u001B[31m%s\n\r\u001B[0m", config.ServerDB)
+		fmt.Printf("Shared: \u001B[31m%s\n\n\r\u001B[0m", config.Shared)
 
-		fmt.Println("\tClient Config:")
-		fmt.Printf("Connect IP: %s\n", config.ConnectIP)
-		fmt.Printf("Connect Port: %d\n", config.ClientPort)
-		fmt.Printf("Username: %s\n", config.UserName)
-		fmt.Printf("Userpass: %s\n", config.UserPass)
-		fmt.Printf("Downloads: %s\n", config.Downloads)
+		fmt.Println("\tClient Config:\r")
+		fmt.Printf("Connect IP: \u001B[31m%s\n\r\u001B[0m", config.ConnectIP)
+		fmt.Printf("Connect Port: \u001B[31m%d\n\r\u001B[0m", config.ClientPort)
+		fmt.Printf("Username: \u001B[31m%s\n\r\u001B[0m", config.UserName)
+		fmt.Printf("Userpass: \u001B[31m%s\n\r\u001B[0m", config.UserPass)
+		fmt.Printf("Downloads: \u001B[31m%s\n\r\u001B[0m", config.Downloads)
 
-		fmt.Print("<< Press enter to continue\n")
+		fmt.Print("<< Press enter to continue\n\r")
 		reader := bufio.NewReader(os.Stdin)
 		_, _, _ = reader.ReadRune()
 
-		Run()
+		Run() //
 
-	case "4":
+	case "4": // Config Database - Add/Remove/View users
+		err := term.Restore(int(os.Stdin.Fd()), oldState)
+		if err != nil {
+			return
+		}
 		listener.ConfigDB(0)
 
-	case "X":
-		fmt.Println("Exiting...")
+	case "x":
+		break
+	case "X": // Close App
+		fmt.Println("Exiting...\r")
 		os.Exit(0)
 
-	default:
-		fmt.Println("Invalid choice")
-		fmt.Print("<< Press enter to continue\n")
+	default: // Looping menu
+		fmt.Println("Invalid choice\r")
+		fmt.Print("<< Press enter to continue\n\r")
 		reader := bufio.NewReader(os.Stdin)
 		_, _, _ = reader.ReadRune()
 		Run()

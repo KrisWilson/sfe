@@ -34,12 +34,12 @@ func InitDB(dbname string) {
 			}
 		}(file)
 
-		fmt.Println("[DB] Utworzono baze danych: " + dbname + ".db")
+		fmt.Println("[DB] Utworzono baze danych: " + dbname + ".db" + "\r")
 
 		dsn := "file:" + dbname + ".db?cache=shared&mode=rw"
 		db, err := sql.Open("sqlite3", dsn)
 		if err != nil {
-			fmt.Println("[DB] Unable to connect to database")
+			fmt.Println("[DB] Unable to connect to database" + "\r")
 			panic(err)
 		}
 
@@ -59,13 +59,13 @@ func InitDB(dbname string) {
     			timeout DATETIME NOT NULL 
                 )`)
 		if err != nil {
-			fmt.Println("[DB] Unable to create table")
+			fmt.Println("[DB] Unable to create table" + "\r")
 			panic(err)
 		}
-		fmt.Println("[DB] Dodano tablice users do bazy danych")
+		fmt.Println("[DB] Dodano tablice users do bazy danych" + "\r")
 		err = db.Close()
 		if err != nil {
-			fmt.Println("[DB] Unable to close database")
+			fmt.Println("[DB] Unable to close database" + "\r")
 			return
 		}
 		AddUser("user", "password", "userdir")
@@ -76,7 +76,7 @@ func newToken(username string) string {
 	dsn := "file:" + settings.Load().ServerDB + ".db?cache=shared&mode=rw"
 	db, err := sql.Open("sqlite3", dsn)
 	if err != nil {
-		fmt.Println("[DB] Unable to connect to database")
+		fmt.Println("[DB] Unable to connect to database" + "\r")
 	}
 	var token string
 	for i := 0; i < 64; i++ {
@@ -107,7 +107,7 @@ func RemoveUser(username string) {
 	db, _ := sql.Open("sqlite3", dsn)
 	_, err := db.Exec("DELETE FROM users WHERE name = ?", username)
 	if err != nil {
-		fmt.Println("[DB] Unable to remove user")
+		fmt.Println("[DB] Unable to remove user" + "\r")
 	}
 }
 
@@ -115,7 +115,7 @@ func AddUser(username string, password string, userdir string) {
 	dsn := "file:" + settings.Load().ServerDB + ".db?cache=shared&mode=rw"
 	db, err := sql.Open("sqlite3", dsn)
 	if err != nil {
-		fmt.Println("[DB] Unable to connect to database")
+		fmt.Println("[DB] Unable to connect to database" + "\r")
 	}
 
 	if len(userdir) == 0 {
@@ -126,20 +126,20 @@ func AddUser(username string, password string, userdir string) {
 	_, err = db.Exec("INSERT INTO users (name, pass, dir, token, timeout) VALUES (?,?,?,?,?)",
 		username, password, userdir, "", now.Format(time.DateTime))
 	if err != nil {
-		fmt.Println("[DB] Unable to insert user")
+		fmt.Println("[DB] Unable to insert user" + "\r")
 		panic(err)
 	}
 	// Nowy token - ustawienie tokenu DB na unique, nie mogą być 2 puste pola bo to nie są unikalne
 	newToken(username)
 
-	fmt.Println("Dodano uzytkownika " + username)
+	fmt.Println("Dodano uzytkownika " + username + "\r")
 }
 
 // CheckPassword - Sprawdzenie poprawności hasła użytkownika który się zgłasza w celu potwierdzenia autoryzacji
 func CheckPassword(password string, user string) bool {
 	u, err := getUser(user)
 	if err != nil {
-		fmt.Println("Wystąpił problem: " + user + " => " + err.Error())
+		fmt.Println("Wystąpił problem: " + user + " => " + err.Error() + "\r")
 		return false
 	}
 	return u.Pass == password
@@ -150,10 +150,10 @@ func CheckToken(token string) User {
 	db, err := sql.Open("sqlite3", dsn)
 	var u User
 	u.ID = -1
-	//fmt.Println(token)
+	//fmt.Println(token + "\r")
 	err = db.QueryRow("SELECT * FROM users WHERE token = ?", token).Scan(&u.ID, &u.Name, &u.Pass, &u.Dir, &u.Token, &u.Timeout)
 	if err != nil {
-		fmt.Println("Token not found")
+		fmt.Println("Token not found" + "\r")
 		return u
 	}
 	//fmt.Println(u.Token)
@@ -161,7 +161,7 @@ func CheckToken(token string) User {
 	//fmt.Println("Now: " + now.Format(time.RFC822Z) + " :: Token: " + u.Timeout.Format(time.RFC822Z))
 	//if u.Timeout.After(now) { // czy timeout jest po aktualnym czasie tzn później
 	if now.After(u.Timeout) {
-		fmt.Println("[DB] Token expired")
+		fmt.Println("[DB] Token expired" + "\r")
 		u.ID = -1
 		return u
 	}
@@ -183,7 +183,7 @@ func ConfigDB(preselect int) {
 		fmt.Println("[2] Add user\r")
 		fmt.Println("[3] Remove user\r")
 		fmt.Println("[X] Exit\r")
-		fmt.Print("Your choice: ")
+		fmt.Print("Your choice: " + "\r")
 		input = readKey()
 	}
 
@@ -203,14 +203,14 @@ func ConfigDB(preselect int) {
 			}
 		}(rows)
 
-		fmt.Println("ID \t| Username \t| Password \t| Dir \t| Token \t| Timeout")
+		fmt.Println("ID \t| Username \t| Password \t| Dir \t| Token \t| Timeout" + "\r")
 		for rows.Next() {
 			var col1, col2, col3, col4, col5 string
 			var col6 time.Time
 			if err := rows.Scan(&col1, &col2, &col3, &col4, &col5, &col6); err != nil {
 				panic(err.Error())
 			}
-			fmt.Printf("%s \t| %s \t| %s \t| %s \t| %s \t| %s\n", col1, col2, col3, col4, col5, col6.Format(time.DateTime))
+			fmt.Printf("%s \t| %s \t| %s \t| %s \t| %s \t| %s\n"+"\r", col1, col2, col3, col4, col5, col6.Format(time.DateTime))
 		}
 
 		if err := rows.Err(); err != nil {
@@ -219,24 +219,24 @@ func ConfigDB(preselect int) {
 
 	case "2": // dodanie użytkownika
 		reader := bufio.NewReader(os.Stdin)
-		fmt.Print("Podaj nazwe uzytkownika: ")
+		fmt.Print("Podaj nazwe uzytkownika: " + "\r")
 		username, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println("Błąd podczas czytania danych:", err)
+			fmt.Println("Błąd podczas czytania danych:"+"\r", err)
 			return
 		}
 
-		fmt.Print("Podaj hasło uzytkownika: ")
+		fmt.Print("Podaj hasło uzytkownika: " + "\r")
 		password, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println("Błąd podczas czytania danych:", err)
+			fmt.Println("Błąd podczas czytania danych:"+"\r", err)
 			return
 		}
 
-		fmt.Print("Podaj folder uzytkownika [default=username]: ")
+		fmt.Print("Podaj folder uzytkownika [default=username]: " + "\r")
 		userdir, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println("Błąd podczas czytania danych:", err)
+			fmt.Println("Błąd podczas czytania danych:"+"\r", err)
 			return
 		}
 		username = strings.ReplaceAll(username, "\n", "")
@@ -246,10 +246,10 @@ func ConfigDB(preselect int) {
 
 	case "3":
 		reader := bufio.NewReader(os.Stdin)
-		fmt.Print("Podaj nazwe uzytkownika: ")
+		fmt.Print("Podaj nazwe uzytkownika: " + "\r")
 		username, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println("Błąd podczas czytania danych:", err)
+			fmt.Println("Błąd podczas czytania danych:"+"\r", err)
 			return
 		}
 		username = strings.ReplaceAll(username, "\n", "")
@@ -258,8 +258,8 @@ func ConfigDB(preselect int) {
 		return
 
 	default:
-		fmt.Println("Invalid choice")
-		fmt.Print("<< Press enter to continue\n")
+		fmt.Println("Invalid choice" + "\r")
+		fmt.Print("<< Press enter to continue\n" + "\r")
 		reader := bufio.NewReader(os.Stdin)
 		_, _, _ = reader.ReadRune()
 		ConfigDB(0)

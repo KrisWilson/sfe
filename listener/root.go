@@ -63,7 +63,7 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 				if len(folderPath) == 0 {
 					folderPath = "/"
 				}
-				fmt.Println(now.Format(time.DateTime) + " [Explorer] " + u.Name + " accessed file: " + folderPath + file)
+				fmt.Println(now.Format(time.DateTime) + " [Explorer] " + u.Name + " accessed file: " + folderPath + file + "\r")
 				fileDownload, _ := os.ReadFile(folderPath + file)
 				_, err := w.Write(fileDownload)
 				if err != nil {
@@ -79,7 +79,7 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 					}
 					return
 				}
-				fmt.Println(now.Format(time.DateTime) + " [Explorer] " + u.Name + " accessed folder: " + folderPath)
+				fmt.Println(now.Format(time.DateTime) + " [Explorer] " + u.Name + " accessed folder: " + folderPath + "\r")
 				_, err = fmt.Fprintf(w, "Folder path: %s\n", folderPath)
 				if err != nil {
 					return
@@ -99,7 +99,7 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		} else {
-			_, err := fmt.Fprintf(w, "Authorized - token not accepted")
+			_, err := fmt.Fprintf(w, "Authorized - token not accepted"+"\r")
 			if err != nil {
 				return
 			}
@@ -132,13 +132,13 @@ func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 		//		_, err := fmt.Fprintln(w, "<<Token::Authorized>>")
 		_, err = fmt.Fprint(w, newToken(user.Name))
 		now := time.Now()
-		fmt.Println(now.Format(time.DateTime) + " [authorizeHandler] " + r.URL.Path + " " + r.Method + " " + r.RemoteAddr + " Authorized: " + user.Name)
+		fmt.Println(now.Format(time.DateTime) + " [authorizeHandler] " + r.URL.Path + " " + r.Method + " " + r.RemoteAddr + " Authorized: " + user.Name + "\r")
 		if err != nil {
 			return
 		}
 	} else {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		fmt.Println("[authorizeHandler] " + r.URL.Path + " " + r.Method + " " + r.RemoteAddr + " Unauthorized: " + user.Name)
+		fmt.Println("[authorizeHandler] " + r.URL.Path + " " + r.Method + " " + r.RemoteAddr + " Unauthorized: " + user.Name + "\r")
 		return
 	}
 
@@ -153,13 +153,13 @@ func Host(port int) {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
 
 	if port != -1 {
-		log.Printf("Listening on port %d\n", port)
+		log.Printf("Listening on port %d\n\r", port)
 		err := http.ListenAndServe(":"+strconv.Itoa(port), nil)
 		if err != nil {
 			panic(err)
 		}
 	} else {
-		log.Printf("Listening on port %d\n", config.ServerPort)
+		log.Printf("Listening on port %d\n\r", config.ServerPort)
 		err := http.ListenAndServe(":"+strconv.Itoa(config.ServerPort), nil)
 		if err != nil {
 			panic(err)

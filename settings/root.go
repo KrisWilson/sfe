@@ -41,8 +41,8 @@ func Load() Config {
 
 	err := viper.ReadInConfig() // Wczytaj konfigurację z pliku
 	if err != nil {
-		fmt.Println("[Settings] Error reading config file:", err)
-		fmt.Println("[Settings] Used default properties")
+		fmt.Println("[Settings] Error reading config file:\r", err)
+		fmt.Println("[Settings] Used default properties\r")
 		err := viper.SafeWriteConfig()
 		if err != nil {
 			return Config{}
