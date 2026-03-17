@@ -127,10 +127,10 @@ func DownloadFile(dir string, filename string, downloadDir string) {
 	}(resp.Body)
 	bodyBytes, err := io.ReadAll(resp.Body)
 	err = os.WriteFile(config.DownloadDir+"/"+filename, bodyBytes, os.ModePerm)
-	if err != nil {
-		fmt.Println("[Client] \u001B[31mPobieranie niepowiodło się\r", err, "\r\u001B[0m")
+	if err != nil || resp.StatusCode != http.StatusOK {
+		fmt.Println("[Client] \u001B[31mPobieranie niepowiodło się", "\r\u001B[0m")
 	} else {
-		fmt.Println("[Client] \u001B[36mPobieranie powiodło się\r\u001B[0m")
+		fmt.Println("[Client] \u001B[36mPobieranie powiodło się", "\r\u001B[0m")
 	}
 
 	//fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m\r")

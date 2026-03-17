@@ -42,7 +42,6 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			now := time.Now()
-			// TODO: Uodpornić parametr "path" na exploracje całej przestrzenii dyskowej tj. "../../../"
 			// TODO: Zgłębić temat czy wykonywanie os.Mkdir etc. zezwala na overbuffer/injection do shella
 			folderPath := settings.Load().SharedDir + r.FormValue("path")
 
@@ -71,6 +70,7 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 			// TODO: Dodać wielewątków TCP w celu szybszego pobierania danych oraz weryfikacje pobierania danych
 			// TODO: poprawić logikę pobierania plików
 
+			// przygotowanie przykładowych folderów do użycia, aby zapewnić istnienie folderu /share
 			err = os.Mkdir(settings.Load().SharedDir, 0777)
 			if err != nil {
 			} else {
@@ -93,8 +93,18 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 				if len(folderPath) == 0 {
 					folderPath = "/"
 				}
-				fmt.Println(now.Format(time.DateTime) + " [Explorer] " + u.Name + " accessed file: " + folderPath + file + "\r")
-				fileDownload, _ := os.ReadFile(folderPath + file)
+
+				fileDownload, errfile := os.ReadFile(folderPath + file)
+				if errfile != nil {
+
+					fmt.Println(now.Format(time.DateTime) + " [Explorer] " + u.Name + " CAN'T accessed file: " + folderPath + file + "\r")
+					w.WriteHeader(http.StatusNotFound)
+					fmt.Fprint(w, errfile.Error())
+					return
+				} else {
+					w.WriteHeader(http.StatusOK)
+					fmt.Println(now.Format(time.DateTime) + " [Explorer] " + u.Name + " accessed file: " + folderPath + file + "\r")
+				}
 				_, err := w.Write(fileDownload)
 				if err != nil {
 					return

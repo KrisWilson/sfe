@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"sfe/client"
 	"strings"
 
@@ -17,8 +16,6 @@ var downloadFileCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// eg ./sfe download path/to/file/foo.bar
 		client.ConnectServer()
-		fmt.Println("Downloading file from Sfe ...")
-
 		path := strings.Split(strings.Join(args, ""), "/")
 		client.DownloadFile(strings.Join(path[:len(path)-1], "/"), path[len(path)-1], "")
 	},
