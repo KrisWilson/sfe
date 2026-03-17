@@ -38,9 +38,10 @@ var downloadFileCmd = &cobra.Command{
 	},
 }
 
+//goland:noinspection DuplicatedCode
 var uploadFileCmd = &cobra.Command{
 	Use:   "upload",
-	Short: "[{path}] Wysyła dany plik do folderu uzytkownika",
+	Short: "[{path}] [{uploadPath}] Wysyła dany plik do folderu uzytkownika",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
 			fmt.Println("[SFE] Expected at least 1 argument (got 0)")
@@ -53,6 +54,28 @@ var uploadFileCmd = &cobra.Command{
 		var wg sync.WaitGroup
 		wg.Add(1)
 		client.UploadFile(args[0], args[1], &wg)
+		wg.Wait()
+	},
+}
+
+//goland:noinspection DuplicatedCode
+var uploadDirCmd = &cobra.Command{
+	Use:   "dirupload",
+	Short: "[{dirPath}] [{uploadPath}] Przesyła folder rekurencyjnie na serwer do folderu użytkownika",
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) < 1 {
+			fmt.Println("[SFE] Expected at least 1 argument (got 0)")
+			return
+		}
+
+		if len(args) == 1 {
+			args = append(args, "")
+		}
+
+		client.ConnectServer()
+		var wg sync.WaitGroup
+		wg.Add(1)
+		client.UploadDir(args[0], args[1], &wg)
 		wg.Wait()
 	},
 }

@@ -70,7 +70,11 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 				}
 				return
 			}
-
+			if filename == "." {
+				_, err = fmt.Fprint(w, "[Server Feedback] \u001B[36mFolder "+uploadPath+" craeted successfully\r")
+				fmt.Println("[Uploader] " + u.Name + " has saved " + u.Dir + "/" + uploadPath + "\r")
+				return
+			}
 			respBody, err := io.ReadAll(r.Body)
 			if err != nil {
 				_, err = fmt.Fprintln(w, err)
@@ -81,7 +85,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			} else {
 				_, err = fmt.Fprint(w, "[Server Feedback] \u001B[36mFile "+filename+" uploaded successfully\r")
-				fmt.Println("[Uploader] " + u.Name + " has saved " + u.Dir + "/" + uploadPath + "/" + filename + "\r")
+				fmt.Println("[Uploader] " + u.Name + " has saved " + u.Dir + uploadPath + "/" + filename + "\r")
 			}
 		} else {
 			http.Error(w, "Forbidden; Wrong Token", http.StatusForbidden)

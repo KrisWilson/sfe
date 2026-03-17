@@ -179,13 +179,19 @@ func UploadFile(filename string, uploadPath string, wg *sync.WaitGroup) {
 	if len(uploadPath) == 0 {
 		uploadPath = ""
 	}
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		fmt.Println("[Client] File can't be read", "\r")
-		return
+	data := []byte("")
+	var err error
+	if len(filename) != 0 {
+		data, err = os.ReadFile(filename)
+		if err != nil {
+			fmt.Println("[Client] File can't be read", "\r")
+			return
+		}
+		buff := strings.Split(filename, "/")
+		filename = buff[len(buff)-1]
+	} else {
+		filename = "."
 	}
-	buff := strings.Split(filename, "/")
-	filename = buff[len(buff)-1]
 	req, err := http.NewRequest(http.MethodPut, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/upload?filename="+filename+"&uploadpath="+uploadPath, bytes.NewBuffer(data))
 	if req != nil {
 		req.Header.Set("Token", token)
@@ -205,11 +211,40 @@ func UploadFile(filename string, uploadPath string, wg *sync.WaitGroup) {
 	}(resp.Body)
 	if resp.StatusCode != http.StatusOK {
 		fmt.Println("[Client] Something went wrong " + resp.Status)
+	} else if filename == "." {
+		fmt.Println("[Client] Empty folder "+uploadPath+" has been created successfully", "\r")
 	} else {
-		fmt.Println("[Client] File has been saved successfully", "\r")
+		fmt.Println("[Client] File "+filename+" has been saved successfully", "\r")
 	}
 }
-func UploadDir(uploadDir string, uploadPath string) {}
+
+func UploadDir(uploadDir string, uploadPath string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	folder, err := os.ReadDir(uploadDir)
+	if err != nil {
+		fmt.Println("Folder can't be read", "\r")
+		return
+	}
+
+	wgInside := sync.WaitGroup{}
+	if len(folder) == 0 {
+		wgInside.Add(1)
+		go UploadFile("", uploadPath, &wgInside)
+	} else {
+		for _, file := range folder {
+			if file.IsDir() {
+				wgInside.Add(1)
+				//	fmt.Println("[Dir] " + uploadDir + "/" + file.Name() + " ==> " + uploadPath)
+				go UploadDir(uploadDir+"/"+file.Name(), uploadPath+"/"+file.Name(), &wgInside)
+			} else {
+				wgInside.Add(1)
+				//	fmt.Println("[File] " + uploadDir + "/" + file.Name() + " ==> " + uploadPath)
+				go UploadFile(uploadDir+"/"+file.Name(), uploadPath, &wgInside)
+			}
+		}
+	}
+	wgInside.Wait()
+}
 
 func ConnectServer() {
 	// load settings
@@ -296,6 +331,10 @@ func Run() {
 		wg.Wait()
 
 	case "2": // Start server
+		err := term.Restore(int(os.Stdin.Fd()), oldState)
+		if err != nil {
+			return
+		}
 		fmt.Println("\u001B[31mPress Ctrl+C to quit\u001B[0m\r")
 		go listener.Host(-1)
 		for {
