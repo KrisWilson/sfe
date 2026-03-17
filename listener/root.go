@@ -30,6 +30,69 @@ type FileJSON struct {
 
 var config settings.Config
 
+func uploadHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "PUT" {
+		var u = CheckToken(r.Header.Get("Token"))
+		if u.ID != -1 {
+			err := r.ParseForm()
+			if err != nil {
+				return
+			}
+
+			filename := r.FormValue("filename")
+			uploadPath := r.FormValue("uploadpath")
+
+			// take off "../../../" from filename and uploadpath
+			i := 0
+			for i < 1 {
+				if strings.Contains(filename, "..") {
+					filename = strings.Replace(filename, "..", ".", -1)
+				} else {
+					i = 2
+				}
+			}
+
+			i = 0
+			for i < 1 {
+				if strings.Contains(uploadPath, "..") {
+					uploadPath = strings.Replace(uploadPath, "..", ".", -1)
+				} else {
+					i = 2
+				}
+			}
+
+			// utworz folder uploadu danego uzytkownika
+			err = os.MkdirAll(config.SharedDir+"/"+u.Name+"/"+uploadPath, os.ModePerm)
+			if err != nil {
+				_, err := fmt.Fprintln(w, err)
+				if err != nil {
+					return
+				}
+				return
+			}
+
+			respBody, err := io.ReadAll(r.Body)
+			if err != nil {
+				_, err = fmt.Fprintln(w, err)
+			}
+			err = os.WriteFile(config.SharedDir+"/"+u.Name+"/"+uploadPath+"/"+filename, respBody, os.ModePerm)
+			if err != nil {
+				_, err = fmt.Fprintln(w, err)
+				return
+			} else {
+				_, err = fmt.Fprint(w, "[Server Feedback] \u001B[36mFile "+filename+" uploaded successfully")
+				fmt.Println("[Uploader] " + u.Name + " has saved " + u.Name + "/" + uploadPath + "/" + filename)
+			}
+		} else {
+			http.Error(w, "Forbidden; Wrong Token", http.StatusForbidden)
+			return
+		}
+	} else {
+		http.Error(w, "Method not allowed; Only PUT is allowed", http.StatusMethodNotAllowed)
+		return
+	}
+}
+
 func exploreHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		var u = CheckToken(r.Header.Get("Token"))
@@ -43,7 +106,7 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				return
 			}
-			now := time.Now()
+			now := time.Now() //?
 			// TODO: Zgłębić temat czy wykonywanie os.Mkdir etc. zezwala na overbuffer/injection do shella
 			folderPath := config.SharedDir + r.FormValue("path")
 
@@ -206,6 +269,7 @@ func Host(port int) {
 
 	http.HandleFunc("/authorize", authorizeHandler)
 	http.HandleFunc("/explore", exploreHandler)
+	http.HandleFunc("/upload", uploadHandler)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {})
 
 	if port != -1 {

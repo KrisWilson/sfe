@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TODO: w downloadDir, uploadFile, uploadDir
+// TODO: uploadFile, uploadDir
 // TODO: changePass from clientside
 
 var downloadDirCmd = &cobra.Command{

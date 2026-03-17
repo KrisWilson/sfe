@@ -129,7 +129,7 @@ func DownloadFile(dir string, filename string, downloadDir_ string, wg *sync.Wai
 
 	err = os.WriteFile(downloadDir+"/"+filename, bodyBytes, os.ModePerm)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		fmt.Println("[Client] \u001B[31mPobieranie niepowiodło się", "\r\u001B[0m")
+		fmt.Println("[Client] \u001B[31mPobieranie niepowiodło się "+filename+" => ", err, "\r\u001B[0m")
 	} else {
 		fmt.Println("[Client] \u001B[36mPobieranie powiodło się "+filename, "\r\u001B[0m")
 	}
@@ -174,8 +174,10 @@ func DownloadDir(dir string, downloadDir string, wg *sync.WaitGroup) []byte {
 	return []byte("ok")
 }
 
-func UploadFile(dir string, filename string, uploadDir string) {}
-func UploadDir(dir string, uploadDir string)                   {}
+func UploadFile(filename string, uploadPath string) {
+
+}
+func UploadDir(uploadDir string, uploadPath string) {}
 
 func ConnectServer() {
 	// load settings
