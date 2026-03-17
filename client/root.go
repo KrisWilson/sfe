@@ -12,6 +12,7 @@ import (
 	"sfe/settings"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/spf13/viper"
 	"golang.org/x/term"
@@ -24,10 +25,9 @@ func readKey() rune {
 }
 
 var token string
+var config settings.Config
 
 func ExploreDir(dir string) []byte {
-
-	config := settings.Load()
 	data := []byte("")
 
 	req, err := http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore?path=/"+dir+"/", bytes.NewBuffer(data))
@@ -90,9 +90,8 @@ func ExploreDir(dir string) []byte {
 	return bodyBytes
 }
 
-func DownloadFile(dir string, filename string, downloadDir_ string) {
-
-	config := settings.Load()
+func DownloadFile(dir string, filename string, downloadDir_ string, wg *sync.WaitGroup) {
+	defer wg.Done()
 	downloadDir := config.DownloadDir + "/" + downloadDir_ + "/"
 	err := os.Mkdir(downloadDir, os.ModePerm)
 	if err != nil {
@@ -132,7 +131,7 @@ func DownloadFile(dir string, filename string, downloadDir_ string) {
 	if err != nil || resp.StatusCode != http.StatusOK {
 		fmt.Println("[Client] \u001B[31mPobieranie niepowiodło się", "\r\u001B[0m")
 	} else {
-		fmt.Println("[Client] \u001B[36mPobieranie powiodło się", "\r\u001B[0m")
+		fmt.Println("[Client] \u001B[36mPobieranie powiodło się "+filename, "\r\u001B[0m")
 	}
 
 	//fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m\r")
@@ -140,7 +139,9 @@ func DownloadFile(dir string, filename string, downloadDir_ string) {
 	fmt.Println("\n[Client] Zakonczone połączenie\r")
 }
 
-func DownloadDir(dir string, downloadDir string) []byte {
+func DownloadDir(dir string, downloadDir string, wg *sync.WaitGroup) []byte {
+	defer wg.Done()
+	var wgInside sync.WaitGroup
 	list := ExploreDir(dir)
 	if len(dir) == 0 {
 		dir = "./"
@@ -158,15 +159,18 @@ func DownloadDir(dir string, downloadDir string) []byte {
 	}
 	for _, file := range filesJson {
 		if file.Type == "File" {
-			DownloadFile(dir, file.Name, downloadDir)
+			wgInside.Add(1)
+			go DownloadFile(dir, file.Name, downloadDir, &wgInside)
 		} else {
-			err := os.Mkdir(downloadDir+"/"+file.Name, os.ModePerm)
+			err := os.Mkdir(config.DownloadDir+"/"+downloadDir+"/"+file.Name, os.ModePerm)
 			if err != nil {
 				fmt.Println("Folder can't be created (", err, ")\r")
 			}
-			DownloadDir(file.Name, downloadDir+"/"+file.Name)
+			wgInside.Add(1)
+			go DownloadDir(dir+"/"+file.Name, downloadDir+"/"+file.Name, &wgInside)
 		}
 	}
+	wgInside.Wait()
 	return []byte("ok")
 }
 
@@ -175,7 +179,7 @@ func UploadDir(dir string, uploadDir string)                   {}
 
 func ConnectServer() {
 	// load settings
-	config := settings.Load()
+	config = settings.Load()
 
 	// create json payload to authorize
 	data := []byte(`{"pass":"` + config.UserPass + `",` + `"user":"` + config.UserName + `"` + `}`)
@@ -252,7 +256,10 @@ func Run() {
 	case "1": // Connect to server
 		ConnectServer()
 		ExploreDir("Pics")
-		DownloadFile("Pics", "cute.jpg", "")
+		var wg sync.WaitGroup
+		wg.Add(1)
+		DownloadFile("Pics", "cute.jpg", "", &wg)
+		wg.Wait()
 
 	case "2": // Start server
 		fmt.Println("\u001B[31mPress Ctrl+C to quit\u001B[0m\r")

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"sfe/settings"
 	"strings"
 	"time"
 )
@@ -73,7 +72,7 @@ func InitDB(dbname string) {
 }
 
 func newToken(username string) string {
-	dsn := "file:" + settings.Load().ServerDB + ".db?cache=shared&mode=rw"
+	dsn := "file:" + config.ServerDB + ".db?cache=shared&mode=rw"
 	db, err := sql.Open("sqlite3", dsn)
 	if err != nil {
 		fmt.Println("[DB] Unable to connect to database" + "\r")
@@ -91,7 +90,7 @@ func newToken(username string) string {
 
 func getUser(username string) (User, error) {
 
-	dsn := "file:" + settings.Load().ServerDB + ".db?cache=shared&mode=rw"
+	dsn := "file:" + config.ServerDB + ".db?cache=shared&mode=rw"
 	db, err := sql.Open("sqlite3", dsn)
 
 	var u User
@@ -103,7 +102,7 @@ func getUser(username string) (User, error) {
 }
 
 func RemoveUser(username string) {
-	dsn := "file:" + settings.Load().ServerDB + ".db?cache=shared&mode=rw"
+	dsn := "file:" + config.ServerDB + ".db?cache=shared&mode=rw"
 	db, _ := sql.Open("sqlite3", dsn)
 	_, err := db.Exec("DELETE FROM users WHERE name = ?", username)
 	if err != nil {
@@ -112,7 +111,7 @@ func RemoveUser(username string) {
 }
 
 func AddUser(username string, password string, userdir string) {
-	dsn := "file:" + settings.Load().ServerDB + ".db?cache=shared&mode=rw"
+	dsn := "file:" + config.ServerDB + ".db?cache=shared&mode=rw"
 	db, err := sql.Open("sqlite3", dsn)
 	if err != nil {
 		fmt.Println("[DB] Unable to connect to database" + "\r")
@@ -146,7 +145,7 @@ func CheckPassword(password string, user string) bool {
 }
 
 func CheckToken(token string) User {
-	dsn := "file:" + settings.Load().ServerDB + ".db?cache=shared&mode=rw"
+	dsn := "file:" + config.ServerDB + ".db?cache=shared&mode=rw"
 	db, err := sql.Open("sqlite3", dsn)
 	var u User
 	u.ID = -1
@@ -175,7 +174,7 @@ func readKey() rune {
 }
 
 func ConfigDB(preselect int) {
-	InitDB(settings.Load().ServerDB)
+	InitDB(config.ServerDB)
 	input := rune(preselect + '0')
 	if preselect == 0 {
 		fmt.Println("\033[31m<<< \u001B[0mSFE - DB Config SFE \u001B[31m>>>\u001B[0m\r")
@@ -189,7 +188,7 @@ func ConfigDB(preselect int) {
 
 	switch string(input) {
 	case "1": // pokazanie wszystkich uzytkowników
-		dsn := "file:" + settings.Load().ServerDB + ".db?cache=shared&mode=rw"
+		dsn := "file:" + config.ServerDB + ".db?cache=shared&mode=rw"
 		db, _ := sql.Open("sqlite3", dsn)
 
 		rows, err := db.Query("SELECT * FROM users")

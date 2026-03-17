@@ -3,6 +3,7 @@ package cmd
 import (
 	"sfe/client"
 	"strings"
+	"sync"
 
 	"github.com/spf13/cobra"
 )
@@ -14,8 +15,11 @@ var downloadDirCmd = &cobra.Command{
 	Use:   "dirdownload",
 	Short: "[{path}] Pobiera rekurencyjnie folder spod danej ścieżki",
 	Run: func(cmd *cobra.Command, args []string) {
+		var wg sync.WaitGroup
 		client.ConnectServer()
-		client.DownloadDir(strings.Join(args, " "), "")
+		wg.Add(1)
+		client.DownloadDir(strings.Join(args, " "), "", &wg)
+		wg.Wait()
 	},
 }
 
@@ -26,7 +30,10 @@ var downloadFileCmd = &cobra.Command{
 		// eg ./sfe download path/to/file/foo.bar
 		client.ConnectServer()
 		path := strings.Split(strings.Join(args, ""), "/")
-		client.DownloadFile(strings.Join(path[:len(path)-1], "/"), path[len(path)-1], "")
+		var wg sync.WaitGroup
+		wg.Add(1)
+		client.DownloadFile(strings.Join(path[:len(path)-1], "/"), path[len(path)-1], "", &wg)
+		wg.Wait()
 	},
 }
 

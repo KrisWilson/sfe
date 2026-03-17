@@ -28,6 +28,8 @@ type FileJSON struct {
 	DateModified string `json:"DateModified"`
 }
 
+var config settings.Config
+
 func exploreHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		var u = CheckToken(r.Header.Get("Token"))
@@ -43,7 +45,7 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			now := time.Now()
 			// TODO: Zgłębić temat czy wykonywanie os.Mkdir etc. zezwala na overbuffer/injection do shella
-			folderPath := settings.Load().SharedDir + r.FormValue("path")
+			folderPath := config.SharedDir + r.FormValue("path")
 
 			i := 0
 			for i < 1 {
@@ -66,23 +68,22 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// TODO: Rozdzielić logikę explorer od download file
-			// TODO: Dodać download dir
 			// TODO: Dodać wielewątków TCP w celu szybszego pobierania danych oraz weryfikacje pobierania danych
 			// TODO: poprawić logikę pobierania plików
 
 			// przygotowanie przykładowych folderów do użycia, aby zapewnić istnienie folderu /share
-			err = os.Mkdir(settings.Load().SharedDir, 0777)
+			err = os.Mkdir(config.SharedDir, 0777)
 			if err != nil {
 			} else {
-				err := os.Mkdir(settings.Load().SharedDir+"/Pics", 0777)
+				err := os.Mkdir(config.SharedDir+"/Pics", 0777)
 				if err != nil {
 					return
 				}
-				err = os.Mkdir(settings.Load().SharedDir+"/Files", 0777)
+				err = os.Mkdir(config.SharedDir+"/Files", 0777)
 				if err != nil {
 					return
 				}
-				err = os.WriteFile(settings.Load().SharedDir+"/some.file", []byte("some.file's content <<>>!...!<<>>"), 0777)
+				err = os.WriteFile(config.SharedDir+"/some.file", []byte("some.file's content <<>>!...!<<>>"), 0777)
 				if err != nil {
 					return
 				}
@@ -200,7 +201,7 @@ func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func Host(port int) {
-	config := settings.Load()
+	config = settings.Load()
 	InitDB(config.ServerDB)
 
 	http.HandleFunc("/authorize", authorizeHandler)
