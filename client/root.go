@@ -71,6 +71,7 @@ func ExploreDir(dir string) []byte {
 			largestFile = file.Size
 		}
 	}
+	//min number of space, to dont crash strings.Repeat(" ", pos - 4)
 	posNeeded := len(strconv.Itoa(int(largestFile)))
 	if posNeeded < 4 {
 		posNeeded = 4
@@ -89,11 +90,11 @@ func ExploreDir(dir string) []byte {
 	return bodyBytes
 }
 
-func DownloadFile(dir string, filename string, downloadDir string) {
+func DownloadFile(dir string, filename string, downloadDir_ string) {
 
 	config := settings.Load()
-
-	err := os.Mkdir(config.DownloadDir+"/"+downloadDir, os.ModePerm)
+	downloadDir := config.DownloadDir + "/" + downloadDir_ + "/"
+	err := os.Mkdir(downloadDir, os.ModePerm)
 	if err != nil {
 		// its ok, po prostu folder istnieje, Albo ma jakiś mentalny problem tj. nie moze pisac w folderze
 	}
@@ -102,7 +103,7 @@ func DownloadFile(dir string, filename string, downloadDir string) {
 		dir = dir + "/"
 	}
 
-	fmt.Println("[Client] Pobieranie \u001B[33m" + filename + "\u001B[0m do folderu " + config.DownloadDir + "/" + filename + "....\r")
+	fmt.Println("[Client] Pobieranie \u001B[33m" + filename + "\u001B[0m do folderu " + downloadDir + filename + "....\r")
 	req, err := http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore?path=/"+dir+"&file="+filename, bytes.NewBuffer(data))
 	if req != nil {
 		req.Header.Set("Token", token)
@@ -126,7 +127,8 @@ func DownloadFile(dir string, filename string, downloadDir string) {
 		}
 	}(resp.Body)
 	bodyBytes, err := io.ReadAll(resp.Body)
-	err = os.WriteFile(config.DownloadDir+"/"+filename, bodyBytes, os.ModePerm)
+
+	err = os.WriteFile(downloadDir+"/"+filename, bodyBytes, os.ModePerm)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		fmt.Println("[Client] \u001B[31mPobieranie niepowiodło się", "\r\u001B[0m")
 	} else {
@@ -137,6 +139,39 @@ func DownloadFile(dir string, filename string, downloadDir string) {
 
 	fmt.Println("\n[Client] Zakonczone połączenie\r")
 }
+
+func DownloadDir(dir string, downloadDir string) []byte {
+	list := ExploreDir(dir)
+	if len(dir) == 0 {
+		dir = "./"
+	}
+	if len(downloadDir) == 0 {
+		downloadDir = ""
+	}
+
+	//fmt.Println("Dir: "+dir, "\nDownloadDir: "+downloadDir)
+	var filesJson []listener.FileJSON
+	err := json.Unmarshal(list, &filesJson)
+	if err != nil {
+		fmt.Println("Folder can't be read", "\r")
+		return []byte("err")
+	}
+	for _, file := range filesJson {
+		if file.Type == "File" {
+			DownloadFile(dir, file.Name, downloadDir)
+		} else {
+			err := os.Mkdir(downloadDir+"/"+file.Name, os.ModePerm)
+			if err != nil {
+				fmt.Println("Folder can't be created (", err, ")\r")
+			}
+			DownloadDir(file.Name, downloadDir+"/"+file.Name)
+		}
+	}
+	return []byte("ok")
+}
+
+func UploadFile(dir string, filename string, uploadDir string) {}
+func UploadDir(dir string, uploadDir string)                   {}
 
 func ConnectServer() {
 	// load settings
@@ -218,6 +253,7 @@ func Run() {
 		ConnectServer()
 		ExploreDir("Pics")
 		DownloadFile("Pics", "cute.jpg", "")
+
 	case "2": // Start server
 		fmt.Println("\u001B[31mPress Ctrl+C to quit\u001B[0m\r")
 		go listener.Host(-1)

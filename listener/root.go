@@ -96,8 +96,7 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 
 				fileDownload, errfile := os.ReadFile(folderPath + file)
 				if errfile != nil {
-
-					fmt.Println(now.Format(time.DateTime) + " [Explorer] " + u.Name + " CAN'T accessed file: " + folderPath + file + "\r")
+					fmt.Println(now.Format(time.DateTime) + " [Explorer] " + u.Name + " CAN'T access file: " + folderPath + file + "\r")
 					w.WriteHeader(http.StatusNotFound)
 					fmt.Fprint(w, errfile.Error())
 					return

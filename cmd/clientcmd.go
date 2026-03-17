@@ -7,12 +7,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TODO: downloadFile, downloadDir, uploadFile, uploadDir
+// TODO: w downloadDir, uploadFile, uploadDir
 // TODO: changePass from clientside
+
+var downloadDirCmd = &cobra.Command{
+	Use:   "dirdownload",
+	Short: "[{path}] Pobiera rekurencyjnie folder spod danej ścieżki",
+	Run: func(cmd *cobra.Command, args []string) {
+		client.ConnectServer()
+		client.DownloadDir(strings.Join(args, " "), "")
+	},
+}
 
 var downloadFileCmd = &cobra.Command{
 	Use:   "download",
-	Short: "Download a file from Sfe",
+	Short: "[{path}] Pobiera plik spod danej ścieżki",
 	Run: func(cmd *cobra.Command, args []string) {
 		// eg ./sfe download path/to/file/foo.bar
 		client.ConnectServer()
