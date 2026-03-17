@@ -174,8 +174,40 @@ func DownloadDir(dir string, downloadDir string, wg *sync.WaitGroup) []byte {
 	return []byte("ok")
 }
 
-func UploadFile(filename string, uploadPath string) {
+func UploadFile(filename string, uploadPath string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	if len(uploadPath) == 0 {
+		uploadPath = ""
+	}
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		fmt.Println("[Client] File can't be read", "\r")
+		return
+	}
+	buff := strings.Split(filename, "/")
+	filename = buff[len(buff)-1]
+	req, err := http.NewRequest(http.MethodPut, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/upload?filename="+filename+"&uploadpath="+uploadPath, bytes.NewBuffer(data))
+	if req != nil {
+		req.Header.Set("Token", token)
+	}
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+		//panic(err)
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
 
+		}
+	}(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println("[Client] Something went wrong " + resp.Status)
+	} else {
+		fmt.Println("[Client] File has been saved successfully", "\r")
+	}
 }
 func UploadDir(uploadDir string, uploadPath string) {}
 

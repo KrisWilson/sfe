@@ -53,6 +53,7 @@ func init() {
 	rootCmd.AddCommand(exploreDirCmd)
 	rootCmd.AddCommand(downloadFileCmd)
 	rootCmd.AddCommand(downloadDirCmd)
+	rootCmd.AddCommand(uploadFileCmd)
 
 	// Dodaj komendę zatrzymującą serwer HTTP
 	stopCmd := &cobra.Command{

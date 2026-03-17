@@ -62,7 +62,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// utworz folder uploadu danego uzytkownika
-			err = os.MkdirAll(config.SharedDir+"/"+u.Name+"/"+uploadPath, os.ModePerm)
+			err = os.MkdirAll(config.SharedDir+"/"+u.Dir+"/"+uploadPath, os.ModePerm)
 			if err != nil {
 				_, err := fmt.Fprintln(w, err)
 				if err != nil {
@@ -75,13 +75,13 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				_, err = fmt.Fprintln(w, err)
 			}
-			err = os.WriteFile(config.SharedDir+"/"+u.Name+"/"+uploadPath+"/"+filename, respBody, os.ModePerm)
+			err = os.WriteFile(config.SharedDir+"/"+u.Dir+"/"+uploadPath+"/"+filename, respBody, os.ModePerm)
 			if err != nil {
 				_, err = fmt.Fprintln(w, err)
 				return
 			} else {
-				_, err = fmt.Fprint(w, "[Server Feedback] \u001B[36mFile "+filename+" uploaded successfully")
-				fmt.Println("[Uploader] " + u.Name + " has saved " + u.Name + "/" + uploadPath + "/" + filename)
+				_, err = fmt.Fprint(w, "[Server Feedback] \u001B[36mFile "+filename+" uploaded successfully\r")
+				fmt.Println("[Uploader] " + u.Name + " has saved " + u.Dir + "/" + uploadPath + "/" + filename + "\r")
 			}
 		} else {
 			http.Error(w, "Forbidden; Wrong Token", http.StatusForbidden)

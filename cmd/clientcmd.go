@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"sfe/client"
 	"strings"
 	"sync"
@@ -33,6 +34,25 @@ var downloadFileCmd = &cobra.Command{
 		var wg sync.WaitGroup
 		wg.Add(1)
 		client.DownloadFile(strings.Join(path[:len(path)-1], "/"), path[len(path)-1], "", &wg)
+		wg.Wait()
+	},
+}
+
+var uploadFileCmd = &cobra.Command{
+	Use:   "upload",
+	Short: "[{path}] Wysyła dany plik do folderu uzytkownika",
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) < 1 {
+			fmt.Println("[SFE] Expected at least 1 argument (got 0)")
+			return
+		}
+		if len(args) == 1 {
+			args = append(args, "")
+		}
+		client.ConnectServer()
+		var wg sync.WaitGroup
+		wg.Add(1)
+		client.UploadFile(args[0], args[1], &wg)
 		wg.Wait()
 	},
 }
