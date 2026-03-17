@@ -92,7 +92,12 @@ func ExploreDir(dir string) []byte {
 
 func DownloadFile(dir string, filename string, downloadDir_ string, wg *sync.WaitGroup) {
 	defer wg.Done()
-	downloadDir := config.DownloadDir + "/" + downloadDir_ + "/"
+	var downloadDir string
+	if len(downloadDir_) == 0 {
+		downloadDir = config.DownloadDir + "/"
+	} else {
+		downloadDir = config.DownloadDir + "/" + downloadDir_ + "/"
+	}
 	err := os.Mkdir(downloadDir, os.ModePerm)
 	if err != nil {
 		// its ok, po prostu folder istnieje, Albo ma jakiś mentalny problem tj. nie moze pisac w folderze
@@ -136,7 +141,7 @@ func DownloadFile(dir string, filename string, downloadDir_ string, wg *sync.Wai
 
 	//fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m\r")
 
-	fmt.Println("\n[Client] Zakonczone połączenie\r")
+	//fmt.Println("[Client] Zakonczone połączenie\r")
 }
 
 func DownloadDir(dir string, downloadDir string, wg *sync.WaitGroup) []byte {
@@ -197,6 +202,7 @@ func UploadFile(filename string, uploadPath string, wg *sync.WaitGroup) {
 		req.Header.Set("Token", token)
 	}
 	client := &http.Client{}
+	fmt.Println("[Client] Wysyłanie \u001B[33m"+filename+"\u001B[0m do folderu "+uploadPath, "\r")
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -214,7 +220,7 @@ func UploadFile(filename string, uploadPath string, wg *sync.WaitGroup) {
 	} else if filename == "." {
 		fmt.Println("[Client] Empty folder "+uploadPath+" has been created successfully", "\r")
 	} else {
-		fmt.Println("[Client] File "+filename+" has been saved successfully", "\r")
+		fmt.Println("[Client] \u001B[36mWysyłanie powiodło się "+filename+"\u001B[0m", "\r")
 	}
 }
 
@@ -326,8 +332,9 @@ func Run() {
 		ConnectServer()
 		ExploreDir("Pics")
 		var wg sync.WaitGroup
-		wg.Add(1)
-		DownloadFile("Pics", "cute.jpg", "", &wg)
+		wg.Add(2)
+		go DownloadFile("Pics", "cute.jpg", "", &wg)
+		go UploadFile("client.png", "upstaris", &wg)
 		wg.Wait()
 
 	case "2": // Start server

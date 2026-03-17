@@ -1,6 +1,6 @@
 # Small File Exchanger
 
-## Small app in Go just to send files to other local devices with zero-setup. 
+## Small fast app in Go just to send files to other local devices with zero-setup. 
 
 Created in mind to use it for 5 minutes and forgot forever (unlike FTP/SMB protocols which u have to setup and authorize). 
 
@@ -11,19 +11,23 @@ Created in mind of simplicity and zero-setup file share/retrieve server/client C
 
 
 Server can:
-> Communicate in HTTP (Post/Get/Errors), Authorize (login/pass/token), Manage SQLite DB for authorizing, Send dir tree, Send files to client
-Config
+> Communicate in HTTP (Post/Get/Put/Errors), Authorize (login/pass/token), Manage SQLite DB for authorizing, Send dir tree in JSON, Send files/dirs to client, Receive files/dirs from clients
+
+Do some configs like:
 * Server Port
 * Server DB name
-* Server sharing folder
+* Server Sharing folder
 
 Client can:
-> Communicate in HTTP, authorize and explore server, download files
-Config
+> Communicate in HTTP, Do multiple downloads (even thousands of them at one time), Authorize and explore server, Download files and directories, Upload files and also directories, All from CLI
+
+Also do some configs
 * Connecting IP:Port
 * Login/Password
 * Downloading folder
 
+
+Tested platforms: i386/amd64 for Linux and Windows
 
 Get started:
 ```
