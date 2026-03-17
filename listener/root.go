@@ -45,9 +45,27 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 			// TODO: Uodpornić parametr "path" na exploracje całej przestrzenii dyskowej tj. "../../../"
 			// TODO: Zgłębić temat czy wykonywanie os.Mkdir etc. zezwala na overbuffer/injection do shella
 			folderPath := settings.Load().SharedDir + r.FormValue("path")
-			folderPath = strings.Replace(folderPath, "..", ".", -1)
+
+			i := 0
+			for i < 1 {
+				if strings.Contains(folderPath, "..") {
+					folderPath = strings.Replace(folderPath, "..", ".", -1)
+				} else {
+					i = 2
+				}
+			}
+
 			file := r.FormValue("file")
-			file = strings.Replace(file, "..", ".", -1)
+
+			i = 0
+			for i < 1 {
+				if strings.Contains(file, "..") {
+					file = strings.Replace(file, "..", ".", -1)
+				} else {
+					i = 2
+				}
+			}
+
 			// TODO: Rozdzielić logikę explorer od download file
 			// TODO: Dodać download dir
 			// TODO: Dodać wielewątków TCP w celu szybszego pobierania danych oraz weryfikacje pobierania danych
