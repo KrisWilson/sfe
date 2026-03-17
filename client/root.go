@@ -61,7 +61,8 @@ func ExploreDir(dir string) []byte {
 	var filesJson []listener.FileJSON
 	err = json.Unmarshal(bodyBytes, &filesJson)
 	if err != nil {
-		fmt.Println("Error unmarshaling JSON:", err, "\r")
+		fmt.Println("Folder can't be read", "\r")
+		return []byte("err")
 	}
 
 	var largestFile int64 //do sformatowania później listingu plików...
@@ -71,7 +72,9 @@ func ExploreDir(dir string) []byte {
 		}
 	}
 	posNeeded := len(strconv.Itoa(int(largestFile)))
-
+	if posNeeded < 4 {
+		posNeeded = 4
+	}
 	fmt.Printf("\u001B[36mType \tDate Modified\t\t%s \tname\r\u001B[0m\n\r", "Size"+strings.Repeat(" ", posNeeded-4))
 	for _, file := range filesJson {
 		//	fmt.Printf("Name: %s\nType: %s\nSize: %d bytes\nDate Modified: %s\n", file.Name, file.Type, file.Size, file.DateModified)
