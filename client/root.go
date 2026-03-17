@@ -334,7 +334,7 @@ func Run() {
 		var wg sync.WaitGroup
 		wg.Add(2)
 		go DownloadFile("Pics", "cute.jpg", "", &wg)
-		go UploadFile("client.png", "upstaris", &wg)
+		go UploadFile("client.png", "upstairs", &wg)
 		wg.Wait()
 
 	case "2": // Start server

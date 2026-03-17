@@ -38,3 +38,4 @@ go get sfe/listener
 go run main.go
 ```
 
+![Client-side Help CLI](https://github.com/KrisWilson/sfe/blob/master/help.png)

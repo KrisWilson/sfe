@@ -13,7 +13,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "SmallFileExchanger",
 	Short: "Mała aplikacja do wymiany plików, ponieważ FTP/SMB setupowanie na chwile jest irytujące tylko aby użyć dla paru plików >:(",
-	Long:  "Mały server/client app do wymiany plików, pozwala on bez męczarni z pełnymi protokołami FTP/SMB itp przesyłać dane na inne urządzenia",
+	Long:  "Mały server/client app do wymiany plików,\npozwala on bez męczarni z pełnymi protokołami FTP/SMB itp przesyłać dane na inne urządzenia",
 
 	Run: func(cmd *cobra.Command, args []string) {
 		client.Run()
