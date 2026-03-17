@@ -20,7 +20,7 @@ var downloadFileCmd = &cobra.Command{
 		fmt.Println("Downloading file from Sfe ...")
 
 		path := strings.Split(strings.Join(args, ""), "/")
-		fmt.Println(path)
+		client.DownloadFile(strings.Join(path[:len(path)-1], "/"), path[len(path)-1], "")
 	},
 }
 
