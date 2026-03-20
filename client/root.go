@@ -28,6 +28,20 @@ var token string
 var config settings.Config
 var oldState *term.State
 
+func BytesShortener(in uint64) string {
+	if in < 1000 {
+		return strconv.Itoa(int(in))
+	} else if in > 1000 && in < 1000000 {
+		return strconv.Itoa(int(in/1000)) + " K"
+	} else if in > 1000000 && in < 1000000000 {
+		return strconv.Itoa(int(in/1000000)) + " M"
+	} else if in > 1000000000 {
+		return strconv.Itoa(int(in/1000000)) + " G"
+	} else {
+		return strconv.Itoa(int(in/1000000000)) + " T"
+	}
+}
+
 func ExploreDir(dir string) []byte {
 	data := []byte("")
 
@@ -91,7 +105,7 @@ func ExploreDir(dir string) []byte {
 	return bodyBytes
 }
 
-func DownloadFile(dir string, filename string, downloadDir_ string, wg *sync.WaitGroup) {
+func DownloadFile(dir string, filename string, downloadDir_ string, wg *sync.WaitGroup, bytesDownload *uint64) {
 	defer wg.Done()
 	var downloadDir string
 	if len(downloadDir_) == 0 {
@@ -132,12 +146,12 @@ func DownloadFile(dir string, filename string, downloadDir_ string, wg *sync.Wai
 		}
 	}(resp.Body)
 	bodyBytes, err := io.ReadAll(resp.Body)
-
 	err = os.WriteFile(downloadDir+"/"+filename, bodyBytes, os.ModePerm)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		fmt.Println("[Client] \u001B[31mPobieranie niepowiodło się "+filename+" => ", err, "\r\u001B[0m")
 	} else {
-		fmt.Println("[Client] \u001B[36mPobieranie powiodło się "+filename, "\r\u001B[0m")
+		fmt.Println("[Client] \u001B[36mPobieranie powiodło się "+filename+" ["+BytesShortener(uint64(len(bodyBytes)))+" B]", "\r\u001B[0m")
+		*bytesDownload = uint64(len(bodyBytes)) + *bytesDownload
 	}
 
 	//fmt.Println("\033[31m" + string(bodyBytes) + "\u001B[0m\r")
@@ -145,7 +159,7 @@ func DownloadFile(dir string, filename string, downloadDir_ string, wg *sync.Wai
 	//fmt.Println("[Client] Zakonczone połączenie\r")
 }
 
-func DownloadDir(dir string, downloadDir string, wg *sync.WaitGroup) []byte {
+func DownloadDir(dir string, downloadDir string, wg *sync.WaitGroup, filesDownload *uint, bytesDownload *uint64) {
 	defer wg.Done()
 	var wgInside sync.WaitGroup
 	list := ExploreDir(dir)
@@ -161,23 +175,23 @@ func DownloadDir(dir string, downloadDir string, wg *sync.WaitGroup) []byte {
 	err := json.Unmarshal(list, &filesJson)
 	if err != nil {
 		fmt.Println("Folder can't be read", "\r")
-		return []byte("err")
 	}
 	for _, file := range filesJson {
 		if file.Type == "File" {
 			wgInside.Add(1)
-			go DownloadFile(dir, file.Name, downloadDir, &wgInside)
+			*filesDownload = *filesDownload + 1
+			go DownloadFile(dir, file.Name, downloadDir, &wgInside, bytesDownload)
 		} else {
 			err := os.Mkdir(config.DownloadDir+"/"+downloadDir+"/"+file.Name, os.ModePerm)
 			if err != nil {
 				fmt.Println("Folder can't be created (", err, ")\r")
 			}
 			wgInside.Add(1)
-			go DownloadDir(dir+"/"+file.Name, downloadDir+"/"+file.Name, &wgInside)
+			go DownloadDir(dir+"/"+file.Name, downloadDir+"/"+file.Name, &wgInside, filesDownload, bytesDownload)
 		}
 	}
 	wgInside.Wait()
-	return []byte("ok")
+	return
 }
 
 func UploadFile(filename string, uploadPath string, wg *sync.WaitGroup) {
@@ -321,7 +335,7 @@ func Run() {
 	//fmt.Printf("the char %q was hit", string(b[0]))
 
 	fmt.Println("\033[31m<<< \u001B[0mSFE - Small File Exchanger \u001B[31m>>>\u001B[0m\r")
-	fmt.Println("[\u001B[31m1\u001B[0m] Connect to Server\r")
+	fmt.Println("[\u001B[31m1\u001B[0m] Check connection to server\r")
 	fmt.Println("[\u001B[31m2\u001B[0m] Host a server\r")
 	fmt.Println("[\u001B[31m3\u001B[0m] Show config\r")
 	fmt.Println("[\u001B[31m4\u001B[0m] Config DB\r")
@@ -335,7 +349,8 @@ func Run() {
 		ExploreDir("Pics")
 		var wg sync.WaitGroup
 		wg.Add(2)
-		go DownloadFile("Pics", "cute.jpg", "", &wg)
+		var bytes uint64
+		go DownloadFile("Pics", "cute.jpg", "", &wg, &bytes)
 		go UploadFile("client.png", "upstairs", &wg)
 		wg.Wait()
 		err := term.Restore(int(os.Stdin.Fd()), oldState)

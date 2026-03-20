@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"runtime"
 	"sfe/client"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -29,9 +31,13 @@ var downloadDirCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		var wg sync.WaitGroup
 		client.ConnectServer()
+		timing := time.Now()
 		wg.Add(1)
-		client.DownloadDir(strings.Join(args, " "), "", &wg)
+		var files uint
+		var bytes uint64
+		client.DownloadDir(strings.Join(args, " "), "", &wg, &files, &bytes)
 		wg.Wait()
+		fmt.Println("Job ended, time passed: " + strconv.FormatFloat(time.Now().Sub(timing).Seconds(), 'f', 2, 64) + "s, [ " + client.BytesShortener(bytes) + " ] in " + strconv.Itoa(int(files)) + " files")
 	},
 }
 
@@ -44,8 +50,11 @@ var downloadFileCmd = &cobra.Command{
 		path := strings.Split(strings.Join(args, ""), "/")
 		var wg sync.WaitGroup
 		wg.Add(1)
-		client.DownloadFile(strings.Join(path[:len(path)-1], "/"), path[len(path)-1], "", &wg)
+		timing := time.Now()
+		var bytes uint64
+		client.DownloadFile(strings.Join(path[:len(path)-1], "/"), path[len(path)-1], "", &wg, &bytes)
 		wg.Wait()
+		fmt.Println("Job ended, time passed: " + strconv.FormatFloat(time.Now().Sub(timing).Seconds(), 'f', 2, 64))
 	},
 }
 
@@ -64,8 +73,10 @@ var uploadFileCmd = &cobra.Command{
 		client.ConnectServer()
 		var wg sync.WaitGroup
 		wg.Add(1)
+		timing := time.Now()
 		client.UploadFile(args[0], args[1], &wg)
 		wg.Wait()
+		fmt.Println("Job ended, time passed: " + strconv.FormatFloat(time.Now().Sub(timing).Seconds(), 'f', 2, 64))
 	},
 }
 
@@ -86,8 +97,10 @@ var uploadDirCmd = &cobra.Command{
 		client.ConnectServer()
 		var wg sync.WaitGroup
 		wg.Add(1)
+		timing := time.Now()
 		client.UploadDir(args[0], args[1], &wg)
 		wg.Wait()
+		fmt.Println("Job ended, time passed: " + strconv.FormatFloat(time.Now().Sub(timing).Seconds(), 'f', 2, 64))
 	},
 }
 
