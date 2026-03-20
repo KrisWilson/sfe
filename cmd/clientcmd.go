@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"runtime"
 	"sfe/client"
 	"strings"
 	"sync"
@@ -9,8 +10,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TODO: uploadFile, uploadDir
-// TODO: changePass from clientside
+var compileInfoCmd = &cobra.Command{
+	Use:   "compile-info",
+	Short: "Information about compiler parameters",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Compiler Parameters")
+		fmt.Println("GO OS: " + runtime.GOOS)
+		fmt.Println("GO ARCH: " + runtime.GOARCH)
+		fmt.Println("GO COMPILER: " + runtime.Compiler)
+		fmt.Println("GO VERSION: " + runtime.Version())
+		fmt.Println("GO BUILD: " + runtime.Version())
+	},
+}
 
 var downloadDirCmd = &cobra.Command{
 	Use:   "dirdownload",

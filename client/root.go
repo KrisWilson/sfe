@@ -336,6 +336,10 @@ func Run() {
 		go DownloadFile("Pics", "cute.jpg", "", &wg)
 		go UploadFile("client.png", "upstairs", &wg)
 		wg.Wait()
+		err := term.Restore(int(os.Stdin.Fd()), oldState)
+		if err != nil {
+			return
+		}
 
 	case "2": // Start server
 		err := term.Restore(int(os.Stdin.Fd()), oldState)
