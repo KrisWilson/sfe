@@ -245,6 +245,8 @@ func UploadFile(filename string, uploadPath string, wg *sync.WaitGroup) {
 	} else {
 		filename = "."
 	}
+	uploadPath = url.QueryEscape(uploadPath)
+	filename = url.QueryEscape(filename)
 	req, err := http.NewRequest(http.MethodPut, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/upload?filename="+filename+"&uploadpath="+uploadPath, bytes.NewBuffer(data))
 	if req != nil {
 		req.Header.Set("Token", token)
