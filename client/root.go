@@ -33,19 +33,21 @@ func BytesShortener(in uint64) string {
 	if in < 1000 {
 		return strconv.Itoa(int(in))
 	} else if in > 1000 && in < 1000000 {
-		return strconv.Itoa(int(in/1000)) + " KB"
+		return strconv.FormatFloat(float64(in)/1000, 'f', 2, 32) + " KB"
+
 	} else if in > 1000000 && in < 1000000000 {
-		return strconv.Itoa(int(in/1000000)) + " MB"
+		return strconv.FormatFloat(float64(in)/1000000, 'f', 2, 32) + " MB"
 	} else if in > 1000000000 {
-		return strconv.Itoa(int(in/1000000)) + " GB"
+		return strconv.FormatFloat(float64(in)/1000000000, 'f', 2, 32) + " GB"
 	} else {
-		return strconv.Itoa(int(in/1000000000)) + " TB"
+		return strconv.Itoa(int(in/1000000000000)) + " TB"
 	}
 }
 
 func ExploreDir(dir string) []byte {
 	data := []byte("")
-	dir = url.PathEscape(dir)
+	//dir = url.PathEscape(dir)
+	dir = url.QueryEscape(dir)
 	req, err := http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore?path=/"+dir+"/", bytes.NewBuffer(data))
 	if req != nil {
 		req.Header.Set("Token", token)
@@ -111,7 +113,9 @@ func ExploreDir(dir string) []byte {
 
 func DownloadFile(dir string, filename string, downloadDir_ string, wg *sync.WaitGroup, bytesDownload *uint64) {
 	defer wg.Done()
-	dir = url.PathEscape(dir)
+	//dir = url.PathEscape(dir)
+	dir = url.QueryEscape(dir)
+	filename = url.QueryEscape(filename)
 	var downloadDir string
 	if len(downloadDir_) == 0 {
 		downloadDir = config.DownloadDir + "/"
