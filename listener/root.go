@@ -108,6 +108,7 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 
 			err := r.ParseForm()
 			if err != nil {
+				fmt.Println(err)
 				return
 			}
 			now := time.Now() //?
@@ -134,6 +135,8 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 
+			//fmt.Println("Plik: " + file + "\r")
+			//fmt.Println("Folder: " + folderPath + "\r")
 			// TODO: Rozdzielić logikę explorer od download file
 			// TODO: Dodać wielewątków TCP w celu szybszego pobierania danych oraz weryfikacje pobierania danych
 			// TODO: poprawić logikę pobierania plików
@@ -224,6 +227,7 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 
 			}
 		} else {
+			fmt.Println()
 			http.Error(w, "Authorized - token not accepted", http.StatusBadRequest)
 			return
 		}

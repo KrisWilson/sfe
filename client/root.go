@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"sfe/listener"
 	"sfe/settings"
@@ -32,19 +33,19 @@ func BytesShortener(in uint64) string {
 	if in < 1000 {
 		return strconv.Itoa(int(in))
 	} else if in > 1000 && in < 1000000 {
-		return strconv.Itoa(int(in/1000)) + " K"
+		return strconv.Itoa(int(in/1000)) + " KB"
 	} else if in > 1000000 && in < 1000000000 {
-		return strconv.Itoa(int(in/1000000)) + " M"
+		return strconv.Itoa(int(in/1000000)) + " MB"
 	} else if in > 1000000000 {
-		return strconv.Itoa(int(in/1000000)) + " G"
+		return strconv.Itoa(int(in/1000000)) + " GB"
 	} else {
-		return strconv.Itoa(int(in/1000000000)) + " T"
+		return strconv.Itoa(int(in/1000000000)) + " TB"
 	}
 }
 
 func ExploreDir(dir string) []byte {
 	data := []byte("")
-
+	dir = url.PathEscape(dir)
 	req, err := http.NewRequest(http.MethodGet, "http://"+config.ConnectIP+":"+strconv.Itoa(config.ClientPort)+"/explore?path=/"+dir+"/", bytes.NewBuffer(data))
 	if req != nil {
 		req.Header.Set("Token", token)
@@ -76,10 +77,13 @@ func ExploreDir(dir string) []byte {
 	var filesJson []listener.FileJSON
 	err = json.Unmarshal(bodyBytes, &filesJson)
 	if err != nil {
-		fmt.Println("Folder can't be read", "\r")
+		fmt.Println("[Response] Folder can't be read", "\r")
+		for _, b := range bodyBytes {
+			fmt.Printf("%c", b)
+		}
+		fmt.Print("\n")
 		return []byte("err")
 	}
-
 	var largestFile int64 //do sformatowania później listingu plików...
 	for _, file := range filesJson {
 		if file.Size > largestFile {
@@ -107,6 +111,7 @@ func ExploreDir(dir string) []byte {
 
 func DownloadFile(dir string, filename string, downloadDir_ string, wg *sync.WaitGroup, bytesDownload *uint64) {
 	defer wg.Done()
+	dir = url.PathEscape(dir)
 	var downloadDir string
 	if len(downloadDir_) == 0 {
 		downloadDir = config.DownloadDir + "/"
@@ -150,7 +155,7 @@ func DownloadFile(dir string, filename string, downloadDir_ string, wg *sync.Wai
 	if err != nil || resp.StatusCode != http.StatusOK {
 		fmt.Println("[Client] \u001B[31mPobieranie niepowiodło się "+filename+" => ", err, "\r\u001B[0m")
 	} else {
-		fmt.Println("[Client] \u001B[36mPobieranie powiodło się "+filename+" ["+BytesShortener(uint64(len(bodyBytes)))+" B]", "\r\u001B[0m")
+		fmt.Println("[Client] \u001B[36mPobieranie powiodło się "+filename+" [ "+BytesShortener(uint64(len(bodyBytes)))+" ]", "\r\u001B[0m")
 		*bytesDownload = uint64(len(bodyBytes)) + *bytesDownload
 	}
 
