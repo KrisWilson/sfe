@@ -264,6 +264,7 @@ func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
+		fmt.Println("Authorizing: " + user.Pass + " : " + user.Name + "\r")
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		fmt.Println("[authorizeHandler] " + r.URL.Path + " " + r.Method + " " + r.RemoteAddr + " Unauthorized: " + user.Name + "\r")
 		return

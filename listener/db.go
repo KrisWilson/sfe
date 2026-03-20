@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"sfe/settings"
 	"strings"
 	"time"
 )
@@ -89,12 +90,11 @@ func newToken(username string) string {
 }
 
 func getUser(username string) (User, error) {
-
 	dsn := "file:" + config.ServerDB + ".db?cache=shared&mode=rw"
 	db, err := sql.Open("sqlite3", dsn)
 
 	var u User
-	err = db.QueryRow("SELECT * FROM users WHERE name = ?", username).Scan(&u.ID, &u.Name, &u.Pass, &u.Dir, &u.Token, &u.Timeout)
+	err = db.QueryRow("SELECT * FROM users WHERE name=?", username).Scan(&u.ID, &u.Name, &u.Pass, &u.Dir, &u.Token, &u.Timeout)
 	if err != nil {
 		return u, err
 	}
@@ -102,6 +102,7 @@ func getUser(username string) (User, error) {
 }
 
 func RemoveUser(username string) {
+	config = settings.Load()
 	dsn := "file:" + config.ServerDB + ".db?cache=shared&mode=rw"
 	db, _ := sql.Open("sqlite3", dsn)
 	_, err := db.Exec("DELETE FROM users WHERE name = ?", username)
@@ -111,6 +112,7 @@ func RemoveUser(username string) {
 }
 
 func AddUser(username string, password string, userdir string) {
+	config = settings.Load()
 	dsn := "file:" + config.ServerDB + ".db?cache=shared&mode=rw"
 	db, err := sql.Open("sqlite3", dsn)
 	if err != nil {

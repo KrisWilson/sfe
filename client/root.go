@@ -308,14 +308,18 @@ func ConnectServer() {
 		panic(err)
 	}
 
-	// TODO: Dodaj http request z tokenem wygenerowanym powyżej poprzez autoryzacje
 	// TODO: Dodaj pętle, możliwość exploracji oraz pobierania plików
 	// TODO: Dodaj wielowątkową opcje TCP do pobierania danych
 	// TODO: Dodaj weryfikacje pobranych danych
 
 	token = string(bodyBytes)
-
-	fmt.Println("[Client] Autoryzacja ukończona pomyślne\r") //\n[>>" + token + "<<]")
+	if len(token) != 64 {
+		fmt.Println(config.UserPass + " => " + config.UserName)
+		fmt.Println(token)
+	} else {
+		fmt.Println("[Client] Autoryzacja ukończona pomyślne\r") //\n[>>" + token + "<<]")
+		fmt.Println(token)
+	}
 }
 
 func Run() {
