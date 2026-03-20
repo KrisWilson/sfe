@@ -26,6 +26,7 @@ func readKey() rune {
 
 var token string
 var config settings.Config
+var oldState *term.State
 
 func ExploreDir(dir string) []byte {
 	data := []byte("")
@@ -296,8 +297,9 @@ func ConnectServer() {
 
 func Run() {
 
-	// switch stdin into 'raw' mode
-	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+	// switch stdin into 'raw' modes
+	var err error
+	oldState, err = term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
 		fmt.Println(err)
 		return
