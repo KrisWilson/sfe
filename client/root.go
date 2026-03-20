@@ -29,6 +29,18 @@ var token string
 var config settings.Config
 var oldState *term.State
 
+func ErrorLog(err error, prefix string) {
+	file, err := os.OpenFile("error.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		_, err = file.WriteString(prefix + " " + err.Error() + "\n")
+		if err != nil {
+		}
+		err = file.Close()
+		if err != nil {
+		}
+	}
+}
+
 func BytesShortener(in uint64) string {
 	if in < 1000 {
 		return strconv.Itoa(int(in))
@@ -39,9 +51,9 @@ func BytesShortener(in uint64) string {
 		return strconv.FormatFloat(float64(in)/1000000, 'f', 2, 32) + " MB"
 	} else if in > 1000000000 {
 		return strconv.FormatFloat(float64(in)/1000000000, 'f', 2, 32) + " GB"
-	} else {
-		return strconv.Itoa(int(in/1000000000000)) + " TB"
 	}
+	return strconv.Itoa(int(in/1000000000000)) + " TB"
+
 }
 
 func ExploreDir(dir string) []byte {
@@ -53,20 +65,21 @@ func ExploreDir(dir string) []byte {
 		req.Header.Set("Token", token)
 	}
 	if err != nil {
-		panic(err)
+		ErrorLog(err, "[Http Request Error]")
+		return []byte("Unauthorized")
 	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		ErrorLog(err, "[Http Client]")
+		return []byte("Unauthorized")
 		//panic(err)
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-
 		}
 	}(resp.Body)
 
@@ -84,6 +97,7 @@ func ExploreDir(dir string) []byte {
 			fmt.Printf("%c", b)
 		}
 		fmt.Print("\n")
+		ErrorLog(err, "[JSON Parser]")
 		return []byte("err")
 	}
 	var largestFile int64 //do sformatowania później listingu plików...
@@ -138,14 +152,15 @@ func DownloadFile(dir string, filename string, downloadDir_ string, wg *sync.Wai
 	}
 
 	if err != nil {
-		panic(err)
+		ErrorLog(err, "[Http Client]")
 	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		ErrorLog(err, "[Http Client]")
+		return
 		//panic(err)
 	}
 	defer func(Body io.ReadCloser) {
@@ -155,9 +170,17 @@ func DownloadFile(dir string, filename string, downloadDir_ string, wg *sync.Wai
 		}
 	}(resp.Body)
 	bodyBytes, err := io.ReadAll(resp.Body)
+
+	err = os.MkdirAll(downloadDir, os.ModePerm)
+	if err != nil {
+		ErrorLog(err, "[Mkdir]")
+		// do nothing - najprawdopodobniej istnieje już taki folder
+	}
+
 	err = os.WriteFile(downloadDir+"/"+filename, bodyBytes, os.ModePerm)
 	if err != nil || resp.StatusCode != http.StatusOK {
 		fmt.Println("[Client] \u001B[31mPobieranie niepowiodło się "+filename+" => ", err, "\r\u001B[0m")
+		ErrorLog(err, "[Client]")
 	} else {
 		fmt.Println("[Client] \u001B[36mPobieranie powiodło się "+filename+" [ "+BytesShortener(uint64(len(bodyBytes)))+" ]", "\r\u001B[0m")
 		*bytesDownload = uint64(len(bodyBytes)) + *bytesDownload
@@ -184,6 +207,7 @@ func DownloadDir(dir string, downloadDir string, wg *sync.WaitGroup, filesDownlo
 	err := json.Unmarshal(list, &filesJson)
 	if err != nil {
 		fmt.Println("Folder can't be read", "\r")
+		ErrorLog(err, "[JSON Parser [Dir]]")
 	}
 	for _, file := range filesJson {
 		if file.Type == "File" {
@@ -191,7 +215,7 @@ func DownloadDir(dir string, downloadDir string, wg *sync.WaitGroup, filesDownlo
 			*filesDownload = *filesDownload + 1
 			go DownloadFile(dir, file.Name, downloadDir, &wgInside, bytesDownload)
 		} else {
-			err := os.Mkdir(config.DownloadDir+"/"+downloadDir+"/"+file.Name, os.ModePerm)
+			err := os.MkdirAll(config.DownloadDir+"/"+downloadDir+"/"+file.Name, os.ModePerm)
 			if err != nil {
 				fmt.Println("Folder can't be created (", err, ")\r")
 			}
@@ -309,17 +333,18 @@ func ConnectServer() {
 	}
 
 	// TODO: Dodaj pętle, możliwość exploracji oraz pobierania plików
-	// TODO: Dodaj wielowątkową opcje TCP do pobierania danych
 	// TODO: Dodaj weryfikacje pobranych danych
 
 	token = string(bodyBytes)
 	if len(token) != 64 {
-		fmt.Println(config.UserPass + " => " + config.UserName)
-		fmt.Println(token)
-	} else {
-		fmt.Println("[Client] Autoryzacja ukończona pomyślne\r") //\n[>>" + token + "<<]")
-		fmt.Println(token)
+		//	fmt.Println(config.UserPass + " => " + config.UserName)
+		//	fmt.Println(token)
+		fmt.Println("[Client] Błąd autoryzacji")
+		os.Exit(1)
 	}
+	fmt.Println("[Client] Autoryzacja ukończona pomyślne\r") //\n[>>" + token + "<<]")
+	//	fmt.Println(token)
+
 }
 
 func Run() {
@@ -362,8 +387,8 @@ func Run() {
 		ExploreDir("Pics")
 		var wg sync.WaitGroup
 		wg.Add(2)
-		var bytes uint64
-		go DownloadFile("Pics", "cute.jpg", "", &wg, &bytes)
+		var bytesDownload uint64
+		go DownloadFile("Pics", "cute.jpg", "", &wg, &bytesDownload)
 		go UploadFile("client.png", "upstairs", &wg)
 		wg.Wait()
 		err := term.Restore(int(os.Stdin.Fd()), oldState)
@@ -383,9 +408,8 @@ func Run() {
 			if input == 3 {
 				fmt.Println("\u001B[31mCtrl+C detected, now exit...\u001B[0m\r")
 				os.Exit(0)
-			} else {
-				fmt.Println("Key pressed " + strconv.Itoa(int(input)) + "\r")
 			}
+			fmt.Println("Key pressed " + strconv.Itoa(int(input)) + "\r")
 		}
 
 	case "3": // Print config

@@ -36,6 +36,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		if u.ID != -1 {
 			err := r.ParseForm()
 			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
 
@@ -108,6 +109,7 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 
 			err := r.ParseForm()
 			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
 				fmt.Println(err)
 				return
 			}
@@ -169,12 +171,14 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 				if errfile != nil {
 					fmt.Println(now.Format(time.DateTime) + " [Explorer] " + u.Name + " CAN'T access file: " + folderPath + file + "\r")
 					w.WriteHeader(http.StatusNotFound)
-					fmt.Fprint(w, errfile.Error())
+					_, err := fmt.Fprint(w, errfile.Error())
+					if err != nil {
+						return
+					}
 					return
-				} else {
-					w.WriteHeader(http.StatusOK)
-					fmt.Println(now.Format(time.DateTime) + " [Explorer] " + u.Name + " accessed file: " + folderPath + file + "\r")
 				}
+				w.WriteHeader(http.StatusOK)
+				fmt.Println(now.Format(time.DateTime) + " [Explorer] " + u.Name + " accessed file: " + folderPath + file + "\r")
 				_, err := w.Write(fileDownload)
 				if err != nil {
 					return
@@ -185,6 +189,7 @@ func exploreHandler(w http.ResponseWriter, r *http.Request) {
 					fmt.Println("Error reading directory:\r", err, "\r")
 					_, err := fmt.Fprintln(w, "Error reading directory "+folderPath+"\r")
 					if err != nil {
+						http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 						return
 					}
 					return
@@ -245,6 +250,7 @@ func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		fmt.Println("[Authorize] Wystąpił problem " + err.Error())
 		return
 	}
 
@@ -285,13 +291,15 @@ func Host(port int) {
 		log.Printf("Listening on port %d\n\r", port)
 		err := http.ListenAndServe(":"+strconv.Itoa(port), nil)
 		if err != nil {
-			panic(err)
+			fmt.Println("Wystąpił problem: " + err.Error())
+			os.Exit(1)
 		}
 	} else {
 		log.Printf("Listening on port %d\n\r", config.ServerPort)
 		err := http.ListenAndServe(":"+strconv.Itoa(config.ServerPort), nil)
 		if err != nil {
-			panic(err)
+			fmt.Println("Wystąpił problem: " + err.Error())
+			os.Exit(1)
 		}
 	}
 

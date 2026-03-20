@@ -52,7 +52,7 @@ func InitDB(dbname string) {
 		_, err = db.Exec(
 			`CREATE TABLE IF NOT EXISTS users (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				name VARCHAR(20) NOT NULL,
+				name VARCHAR(20) UNIQUE NOT NULL,
 				pass VARCHAR(20) NOT NULL,
 				dir TEXT NOT NULL,
 				token CHAR(64) UNIQUE NOT NULL,
@@ -176,6 +176,7 @@ func readKey() rune {
 }
 
 func ConfigDB(preselect int) {
+	config = settings.Load()
 	InitDB(config.ServerDB)
 	input := rune(preselect + '0')
 	if preselect == 0 {
@@ -184,7 +185,7 @@ func ConfigDB(preselect int) {
 		fmt.Println("[2] Add user\r")
 		fmt.Println("[3] Remove user\r")
 		fmt.Println("[X] Exit\r")
-		fmt.Print("Your choice: " + "\r")
+		fmt.Println("Your choice: " + "\r")
 		input = readKey()
 	}
 
