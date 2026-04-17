@@ -39,3 +39,16 @@ go run main.go
 ```
 
 ![Client-side Help CLI](https://github.com/KrisWilson/sfe/blob/master/help.png)
+
+
+
+
+
+
+
+TODO:
+* Redis for authorization and the most downloaded data from share folder
+* Load-Balancer and quene manager, maximimum download/upload config, number of maximum connections
+* Add option for HTTP to send/download files in parts for big files and low RAM machines
+
+
